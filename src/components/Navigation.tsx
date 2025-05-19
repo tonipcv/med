@@ -47,7 +47,6 @@ export default function Navigation() {
     '/dashboard/services',
     '/dashboard/pacientes',
     '/profile',
-    '/IA',
     '/links'
   ];
 
@@ -102,13 +101,7 @@ export default function Navigation() {
           label: 'Pipeline',
           icon: FunnelIcon,
           description: 'Gestão de status'
-        },
-        {
-          href: '/IA',
-          label: 'Assistente IA',
-          icon: SparklesIcon,
-          description: 'Análise de pacientes'
-        },
+        }
       ]
     }
   ];
