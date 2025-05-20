@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { FormModal } from '@/components/FormModal';
 import { LocationMap } from '@/components/ui/location-map';
 import { Address } from '@/components/ui/address-manager';
+import { AiChatWidget } from '@/components/AiChatWidget';
+import { WhatsAppButton } from '@/components/ui/whatsapp-button';
 
 const PLATFORM_ICONS = {
   INSTAGRAM: Instagram,
@@ -45,7 +47,7 @@ interface ModernTemplateProps {
     primaryColor: string;
     blocks: Array<{
       id: string;
-      type: string;
+      type: 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP';
       content: {
         title?: string;
         label?: string;
@@ -59,6 +61,9 @@ interface ModernTemplateProps {
         state?: string;
         zipCode?: string;
         country?: string;
+        buttonTitle?: string;
+        greeting?: string;
+        whatsappNumber?: string;
       };
       order: number;
     }>;
@@ -72,6 +77,7 @@ interface ModernTemplateProps {
       name: string;
       image: string | null;
       specialty: string | null;
+      phone: string | null;
     };
   };
 }
@@ -113,6 +119,10 @@ export default function ModernTemplate({ page }: ModernTemplateProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white py-16 px-4 sm:px-6">
+      {/* Only show fixed WhatsApp button if there's no WhatsApp block */}
+      {page.user.phone && !page.blocks.some(block => block.type === 'WHATSAPP') && (
+        <WhatsAppButton phoneNumber={page.user.phone} fixed={true} />
+      )}
       <div className="max-w-lg mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
@@ -273,6 +283,25 @@ export default function ModernTemplate({ page }: ModernTemplateProps) {
               );
             }
 
+            if (block.type === 'AI_CHAT') {
+              return (
+                <div key={block.id}>
+                  <AiChatWidget 
+                    doctorId={page.user.id} 
+                    doctorName={page.user.name}
+                    buttonTitle={block.content.buttonTitle}
+                    initialGreeting={block.content.greeting}
+                  />
+                </div>
+              );
+            }
+
+            if (block.type === 'WHATSAPP') {
+              return block.content.whatsappNumber ? (
+                <WhatsAppButton key={block.id} phoneNumber={block.content.whatsappNumber} fixed={false} />
+              ) : null;
+            }
+
             return null;
           })}
         </div>
@@ -300,7 +329,14 @@ export default function ModernTemplate({ page }: ModernTemplateProps) {
 
         {/* Footer */}
         <div className="text-center text-sm text-gray-500 pt-10">
-          <p className="opacity-75">Created with Med1</p>
+          <a 
+            href="https://med1.app/auth/register" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="opacity-75 hover:opacity-100 transition-opacity"
+          >
+            Created with Med1
+          </a>
         </div>
       </div>
 

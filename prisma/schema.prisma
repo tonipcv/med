@@ -41,6 +41,7 @@ model User {
   pages                  Page[]
   pipelines              Pipeline[]
   services               Service[]
+  conversations          Conversation[]
 }
 
 model Indication {
@@ -209,6 +210,7 @@ model Patient {
   referrals         PatientReferral[]
   lead              Lead?             @relation(fields: [leadId], references: [id])
   user              User?             @relation(fields: [userId], references: [id])
+  conversations     Conversation[]
 }
 
 model PaymentLink {
@@ -268,9 +270,9 @@ model PageAddress {
 model PageBlock {
   id      String @id @default(cuid())
   pageId  String
-  type    String
+  type    String // 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT'
   content Json
-  order   Int
+  order   Int    @default(0)
   page    Page   @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
   @@index([pageId])
@@ -366,4 +368,32 @@ enum RewardType {
 enum reward_type {
   PAGE
   TEXT
+}
+
+model Conversation {
+  id            String    @id @default(cuid())
+  sessionId     String    @unique
+  doctorId      String
+  patientId     String?
+  status        String    @default("active")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  doctor        User      @relation(fields: [doctorId], references: [id])
+  patient       Patient?  @relation(fields: [patientId], references: [id])
+  messages      Message[]
+
+  @@index([doctorId])
+  @@index([patientId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  role           String       // "user" | "assistant"
+  content        String       @db.Text
+  metadata       Json?        // For storing form data, parsed intents, etc.
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
 }

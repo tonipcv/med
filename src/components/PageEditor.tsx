@@ -14,6 +14,7 @@ import { ArrowLeft, Save, Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AddressManager, Address } from '@/components/ui/address-manager';
+import { Block, SocialLink } from '@/types/blocks';
 
 interface Page {
   id: string;
@@ -24,26 +25,12 @@ interface Page {
   address?: string;
   primaryColor: string;
   layout: string;
-  blocks: PageBlock[];
+  blocks: Block[];
   socialLinks: SocialLink[];
   addresses?: Address[];
   user?: {
     slug: string;
   };
-}
-
-interface PageBlock {
-  id: string;
-  type: 'BUTTON' | 'FORM';
-  content: any;
-  order: number;
-}
-
-interface SocialLink {
-  id: string;
-  platform: 'INSTAGRAM' | 'WHATSAPP' | 'YOUTUBE' | 'FACEBOOK' | 'LINKEDIN' | 'TIKTOK' | 'TWITTER';
-  username: string;
-  url: string;
 }
 
 interface PageEditorProps {
@@ -115,7 +102,7 @@ export function PageEditor({ pageId }: PageEditorProps) {
     setPage({ ...page, [field]: value });
   };
 
-  const handleBlocksChange = async (newBlocks: PageBlock[]) => {
+  const handleBlocksChange = async (newBlocks: Block[]) => {
     if (!page) return;
     
     try {

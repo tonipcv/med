@@ -3,11 +3,13 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Instagram, Youtube, Facebook, Linkedin, Twitter, MessageCircle, ArrowUpRight, MapPin } from 'lucide-react';
+import { Instagram, Youtube, Facebook, Linkedin, Twitter, MessageCircle, ArrowUpRight, MapPin, ArrowRight } from 'lucide-react';
 import { BsPatchCheckFill } from 'react-icons/bs';
 import { FormModal } from '@/components/FormModal';
 import { LocationMap } from '@/components/ui/location-map';
 import { Address } from '@/components/ui/address-manager';
+import { AiChatWidget } from '@/components/AiChatWidget';
+import { WhatsAppButton } from '@/components/ui/whatsapp-button';
 
 interface BentoDarkTemplateProps {
   page: {
@@ -18,7 +20,7 @@ interface BentoDarkTemplateProps {
     primaryColor: string;
     blocks: Array<{
       id: string;
-      type: 'BUTTON' | 'FORM' | 'ADDRESS';
+      type: 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP';
       content: {
         title?: string;
         label?: string;
@@ -32,7 +34,14 @@ interface BentoDarkTemplateProps {
         state?: string;
         zipCode?: string;
         country?: string;
+        buttonTitle?: string;
+        greeting?: string;
+        whatsappNumber?: string;
+        hasButton?: boolean;
+        buttonLabel?: string;
+        buttonUrl?: string;
       };
+      order: number;
     }>;
     socialLinks: Array<{
       platform: 'INSTAGRAM' | 'WHATSAPP' | 'YOUTUBE' | 'FACEBOOK' | 'LINKEDIN' | 'TWITTER';
@@ -43,6 +52,7 @@ interface BentoDarkTemplateProps {
       name: string;
       image: string | null;
       specialty: string | null;
+      phone?: string;
     };
   };
 }
@@ -80,6 +90,10 @@ const BentoDarkTemplate = ({ page }: BentoDarkTemplateProps) => {
         `,
       }}
     >
+      {/* Show fixed WhatsApp button if user has a phone number */}
+      {page.user.phone && (
+        <WhatsAppButton phoneNumber={page.user.phone} fixed={true} variant="dark" />
+      )}
       <div className="max-w-3xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
@@ -208,21 +222,76 @@ const BentoDarkTemplate = ({ page }: BentoDarkTemplateProps) => {
                     background: `linear-gradient(135deg, ${lighterColor}10 0%, ${darkerColor}10 100%)`,
                   }}
                 >
-                  <h2 
-                    className="text-2xl font-semibold mb-6 flex items-center gap-2"
-                    style={{ color: primaryColor }}
-                  >
-                    <MapPin size={20} />
-                    {block.content.city || 'Location'}
-                  </h2>
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 
+                      className="text-2xl font-semibold flex items-center gap-2"
+                      style={{ color: primaryColor }}
+                    >
+                      <MapPin size={20} />
+                      {block.content.city || 'Location'}
+                    </h2>
+                    {block.content.hasButton && block.content.buttonLabel && block.content.buttonUrl && (
+                      <a
+                        href={block.content.buttonUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(
+                          "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-normal",
+                          "bg-white/5 hover:bg-white/10 border border-white/10 text-white",
+                          "shadow-sm hover:shadow-md",
+                          "transition-all duration-300",
+                          "transform hover:scale-[1.02] active:scale-[0.98]",
+                          "rounded-lg"
+                        )}
+                      >
+                        {block.content.buttonLabel}
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                  </div>
                   <div className="rounded-xl overflow-hidden">
                     <LocationMap 
                       addresses={[addressObject]} 
                       primaryColor={primaryColor}
+                      hasButton={block.content.hasButton}
+                      buttonLabel={block.content.buttonLabel}
+                      buttonUrl={block.content.buttonUrl}
                     />
                   </div>
                 </div>
               );
+            }
+
+            if (block.type === 'AI_CHAT') {
+              return (
+                <div key={block.id}>
+                  <AiChatWidget 
+                    doctorId={page.user.id} 
+                    doctorName={page.user.name}
+                    buttonTitle={block.content.buttonTitle}
+                    initialGreeting={block.content.greeting}
+                  />
+                </div>
+              );
+            }
+
+            if (block.type === 'WHATSAPP') {
+              const whatsappNumber = block.content.whatsappNumber || page.user.phone;
+              return whatsappNumber ? (
+                <div
+                  key={block.id}
+                  className={cn(
+                    "rounded-2xl",
+                    index % 3 === 0 ? "md:col-span-2" : ""
+                  )}
+                >
+                  <WhatsAppButton 
+                    phoneNumber={whatsappNumber} 
+                    fixed={false} 
+                    variant="dark" 
+                  />
+                </div>
+              ) : null;
             }
 
             return null;

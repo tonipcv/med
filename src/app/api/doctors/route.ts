@@ -3,19 +3,17 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { parse } from 'csv-parse/sync';
+import { hash } from 'bcryptjs';
 
 // GET /api/doctors - Lista todos os médicos
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id || session.user.type !== 'admin') {
+    if (!session?.user?.id || session.user.type !== 'user') {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
     const doctors = await prisma.user.findMany({
-      where: {
-        type: 'user',
-      },
       select: {
         id: true,
         name: true,
@@ -45,7 +43,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id || session.user.type !== 'admin') {
+    if (!session?.user?.id || session.user.type !== 'user') {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
@@ -98,8 +96,8 @@ export async function POST(request: NextRequest) {
               email: record.email,
               specialty: record.specialty || null,
               phone: record.phone || null,
-              type: 'user',
               slug,
+              password: await hash('changeme123', 12), // Default password that should be changed on first login
             },
           });
 
@@ -154,8 +152,8 @@ export async function POST(request: NextRequest) {
           email: doctorData.email,
           specialty: doctorData.specialty || null,
           phone: doctorData.phone || null,
-          type: 'user',
           slug,
+          password: await hash('changeme123', 12), // Default password that should be changed on first login
         },
       });
 

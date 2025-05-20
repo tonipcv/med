@@ -8,6 +8,7 @@ import MinimalTemplate from '@/components/pages/templates/MinimalTemplate';
 import CollorTemplate from '@/components/pages/templates/CollorTemplate';
 import BentoDarkTemplate from '@/components/pages/templates/BentoDarkTemplate';
 import { ReferralPage } from '@/components/pages';
+import { AiChatWidget } from '@/components/AiChatWidget';
 
 interface PageProps {
   params: {
@@ -101,7 +102,7 @@ interface TemplatePageProps {
   primaryColor: string;
   blocks: Array<{
     id: string;
-    type: 'BUTTON' | 'FORM' | 'ADDRESS';
+    type: 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP';
     content: {
       title?: string;
       label?: string;
@@ -115,6 +116,12 @@ interface TemplatePageProps {
       state?: string;
       zipCode?: string;
       country?: string;
+      buttonTitle?: string;
+      greeting?: string;
+      whatsappNumber?: string;
+      hasButton?: boolean;
+      buttonLabel?: string;
+      buttonUrl?: string;
     };
     order: number;
   }>;
@@ -127,6 +134,7 @@ interface TemplatePageProps {
     name: string;
     image: string | null;
     specialty: string | null;
+    phone?: string;
   };
 }
 
@@ -140,7 +148,7 @@ function transformPageContent(page: any, templateType: string): any {
     primaryColor: page.primaryColor,
     blocks: page.blocks.map((block: any) => ({
       id: block.id,
-      type: block.type as 'BUTTON' | 'FORM' | 'ADDRESS',
+      type: block.type as 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP',
       content: {
         title: block.content.title,
         label: block.content.label,
@@ -153,7 +161,13 @@ function transformPageContent(page: any, templateType: string): any {
         city: block.content.city,
         state: block.content.state,
         zipCode: block.content.zipCode,
-        country: block.content.country
+        country: block.content.country,
+        buttonTitle: block.content.buttonTitle,
+        greeting: block.content.greeting,
+        whatsappNumber: block.content.whatsappNumber,
+        hasButton: block.content.hasButton,
+        buttonLabel: block.content.buttonLabel,
+        buttonUrl: block.content.buttonUrl
       },
       order: block.order
     })),
@@ -161,7 +175,8 @@ function transformPageContent(page: any, templateType: string): any {
       id: page.user.id,
       name: page.user.name,
       image: page.user.image || null,
-      specialty: page.user.specialty || null
+      specialty: page.user.specialty || null,
+      phone: page.user.phone || null
     } : null
   };
 
@@ -206,7 +221,7 @@ async function getContent(userSlug: string, slug: string): Promise<ContentRespon
     const user = await withRetry(() => 
       prisma.user.findUnique({
         where: { slug: userSlug },
-        select: { id: true, name: true, image: true, specialty: true },
+        select: { id: true, name: true, image: true, specialty: true, phone: true },
       })
     );
 
@@ -257,7 +272,7 @@ async function getContent(userSlug: string, slug: string): Promise<ContentRespon
           layout: page.layout,
           blocks: page.blocks.map(block => ({
             id: block.id,
-            type: block.type as 'BUTTON' | 'FORM' | 'ADDRESS',
+            type: block.type as 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT',
             content: block.content,
             order: block.order,
           })),
@@ -329,7 +344,7 @@ async function getContent(userSlug: string, slug: string): Promise<ContentRespon
             layout: referral.page.layout,
             blocks: referral.page.blocks.map(block => ({
               id: block.id,
-              type: block.type as 'BUTTON' | 'FORM' | 'ADDRESS',
+              type: block.type as 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT',
               content: block.content,
               order: block.order,
             })),

@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { FormModal } from '@/components/FormModal';
 import { LocationMap } from '@/components/ui/location-map';
 import { Address } from '@/components/ui/address-manager';
+import { AiChatWidget } from '@/components/AiChatWidget';
+import { WhatsAppButton } from '@/components/ui/whatsapp-button';
 
 const PLATFORM_ICONS = {
   INSTAGRAM: Instagram,
@@ -45,7 +47,7 @@ interface MinimalTemplateProps {
     primaryColor: string;
     blocks: Array<{
       id: string;
-      type: string;
+      type: 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP';
       content: {
         title?: string;
         label?: string;
@@ -59,6 +61,9 @@ interface MinimalTemplateProps {
         state?: string;
         zipCode?: string;
         country?: string;
+        buttonTitle?: string;
+        greeting?: string;
+        whatsappNumber?: string;
       };
       order: number;
     }>;
@@ -72,6 +77,7 @@ interface MinimalTemplateProps {
       name: string;
       image: string | null;
       specialty: string | null;
+      phone?: string;
     };
   };
 }
@@ -116,38 +122,42 @@ export default function MinimalTemplate({ page }: MinimalTemplateProps) {
 
   return (
     <div className="min-h-screen bg-white py-16 px-4 sm:px-6">
+      {/* Only show fixed WhatsApp button if there's no WhatsApp block */}
+      {page.user.phone && !page.blocks.some(block => block.type === 'WHATSAPP') && (
+        <WhatsAppButton phoneNumber={page.user.phone} fixed={true} variant="default" />
+      )}
       <div className="max-w-lg mx-auto space-y-10">
         {/* Header - Design minimalista profissional */}
-        <div className="text-center space-y-5">
-          <div className="relative w-24 h-24 mx-auto mb-6">
+        <div className="text-center space-y-4">
+          <div className="relative w-20 h-20 mx-auto mb-4">
             <img
               src={page.avatarUrl || page.user.image || '/default-avatar.png'}
               alt={page.user.name}
-              className="w-full h-full object-cover rounded-full shadow-md"
+              className="w-full h-full object-cover rounded-full shadow-sm"
             />
           </div>
-          <h1 className="text-2xl font-medium tracking-tight text-gray-800 flex items-center justify-center gap-2">
+          <h1 className="text-xl font-normal tracking-tight text-gray-800 flex items-center justify-center gap-1.5">
             {page.user.name}
-            <span className="ml-1">
+            <span className="ml-0.5">
               <VerifiedBadge />
             </span>
           </h1>
           {page.user.specialty && (
-            <p className="text-gray-600 text-base font-normal">{page.user.specialty}</p>
+            <p className="text-gray-500 text-sm font-light">{page.user.specialty}</p>
           )}
           {page.subtitle && (
-            <p className="text-gray-500 text-sm max-w-sm mx-auto mt-2">{page.subtitle}</p>
+            <p className="text-gray-400 text-xs max-w-xs mx-auto mt-1">{page.subtitle}</p>
           )}
         </div>
 
         {/* Content Blocks - Design minimalista profissional */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           {page.blocks.map((block) => {
             if (block.type === 'BUTTON') {
               return (
                 <Button
                   key={block.id}
-                  className="w-full py-3 text-base font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-300"
+                  className="w-full py-2.5 text-sm font-normal rounded shadow-sm hover:shadow transition-all duration-300"
                   style={{
                     backgroundColor: primaryColor,
                     color: 'white',
@@ -171,7 +181,7 @@ export default function MinimalTemplate({ page }: MinimalTemplateProps) {
                 return (
                   <Button
                     key={block.id}
-                    className="w-full py-3 text-base font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-300"
+                    className="w-full py-2.5 text-sm font-normal rounded shadow-sm hover:shadow transition-all duration-300"
                     style={{
                       backgroundColor: primaryColor,
                       color: 'white',
@@ -189,49 +199,49 @@ export default function MinimalTemplate({ page }: MinimalTemplateProps) {
               return (
                 <div
                   key={block.id}
-                  className="bg-gray-50 rounded-md p-5 shadow-sm border border-gray-100"
+                  className="bg-gray-50 rounded p-4 shadow-sm border border-gray-100"
                 >
                   <h2 
-                    className="text-base font-medium mb-4"
+                    className="text-sm font-normal mb-3"
                     style={{ color: primaryColor }}
                   >
                     {block.content.title}
                   </h2>
-                  <form onSubmit={(e) => handleSubmit(e, block)} className="space-y-3">
+                  <form onSubmit={(e) => handleSubmit(e, block)} className="space-y-2.5">
                     <div>
-                      <Label htmlFor="name" className="text-sm text-gray-600">Nome</Label>
+                      <Label htmlFor="name" className="text-xs text-gray-500">Nome</Label>
                       <Input 
                         id="name" 
                         name="name"
                         placeholder="Seu nome completo"
-                        className="mt-1 text-sm"
+                        className="mt-1 text-xs"
                         required
                       />
                     </div>
                     <div>
-                      <Label htmlFor="email" className="text-sm text-gray-600">Email</Label>
+                      <Label htmlFor="email" className="text-xs text-gray-500">Email</Label>
                       <Input 
                         id="email" 
                         name="email"
                         type="email"
                         placeholder="seu@email.com"
-                        className="mt-1 text-sm"
+                        className="mt-1 text-xs"
                         required
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phone" className="text-sm text-gray-600">WhatsApp</Label>
+                      <Label htmlFor="phone" className="text-xs text-gray-500">WhatsApp</Label>
                       <Input 
                         id="phone" 
                         name="phone"
                         placeholder="(00) 00000-0000"
-                        className="mt-1 text-sm"
+                        className="mt-1 text-xs"
                         required
                       />
                     </div>
                     <Button 
                       type="submit"
-                      className="w-full mt-2 font-medium"
+                      className="w-full mt-2 text-sm font-normal"
                       style={{
                         backgroundColor: primaryColor,
                         color: 'white',
@@ -256,22 +266,46 @@ export default function MinimalTemplate({ page }: MinimalTemplateProps) {
               return (
                 <div
                   key={block.id}
-                  className="bg-gray-50 rounded-md p-5 shadow-sm border border-gray-100"
+                  className="bg-gray-50 rounded p-4 shadow-sm border border-gray-100"
                 >
                   <h2 
-                    className="text-base font-medium mb-4 flex items-center gap-2"
+                    className="text-sm font-normal mb-3 flex items-center gap-1.5"
                     style={{ color: primaryColor }}
                   >
-                    <MapPin size={16} />
+                    <MapPin size={14} />
                     {block.content.city || 'Location'}
                   </h2>
                   <LocationMap 
                     addresses={[addressObject]} 
                     primaryColor={primaryColor}
-                    height="180px"
+                    height="160px"
                   />
                 </div>
               );
+            }
+
+            if (block.type === 'AI_CHAT') {
+              return (
+                <div key={block.id}>
+                  <AiChatWidget 
+                    doctorId={page.user.id} 
+                    doctorName={page.user.name}
+                    buttonTitle={block.content.buttonTitle}
+                    initialGreeting={block.content.greeting}
+                  />
+                </div>
+              );
+            }
+
+            if (block.type === 'WHATSAPP') {
+              return block.content.whatsappNumber ? (
+                <WhatsAppButton 
+                  key={block.id} 
+                  phoneNumber={block.content.whatsappNumber} 
+                  fixed={false} 
+                  variant="minimal" 
+                />
+              ) : null;
             }
 
             return null;
@@ -300,7 +334,14 @@ export default function MinimalTemplate({ page }: MinimalTemplateProps) {
 
         {/* Footer - Design minimalista profissional */}
         <div className="text-center text-xs text-gray-400 pt-6">
-          <p className="opacity-70">Created with Med1</p>
+          <a 
+            href="https://med1.app/auth/register" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="opacity-70 hover:opacity-100 transition-opacity"
+          >
+            Created with Med1
+          </a>
         </div>
       </div>
 

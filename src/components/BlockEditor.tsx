@@ -5,24 +5,26 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, GripVertical, Trash2, Link2, FormInput, Loader2, CheckSquare, Square, Save } from 'lucide-react';
+import { PlusCircle, GripVertical, Trash2, Link2, FormInput, Loader2, CheckSquare, Square, Save, Plus, FileText, MapPin, MessageCircle, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useDebouncedCallback } from 'use-debounce';
-
-interface Block {
-  id: string;
-  type: 'BUTTON' | 'FORM' | 'ADDRESS';
-  content: any;
-  order: number;
-}
+import { Block, BlockType } from '@/types/blocks';
 
 interface BlockEditorProps {
   blocks: Block[];
   onBlocksChange: (blocks: Block[]) => void;
   disabled?: boolean;
 }
+
+const blockTypes = [
+  { type: 'BUTTON' as const, label: 'Botão' },
+  { type: 'FORM' as const, label: 'Formulário' },
+  { type: 'ADDRESS' as const, label: 'Endereço' },
+  { type: 'AI_CHAT' as const, label: 'Chat de IA' },
+  { type: 'WHATSAPP' as const, label: 'WhatsApp Flutuante' }
+] as const;
 
 export function BlockEditor({ blocks, onBlocksChange, disabled = false }: BlockEditorProps) {
   const [localBlocks, setLocalBlocks] = useState<Block[]>(blocks);
@@ -34,6 +36,7 @@ export function BlockEditor({ blocks, onBlocksChange, disabled = false }: BlockE
   const [pipelines, setPipelines] = useState<Array<{ id: string; name: string }>>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedBlockType, setSelectedBlockType] = useState<Block['type'] | null>(null);
 
   useEffect(() => {
     setLocalBlocks(blocks);
@@ -79,37 +82,70 @@ export function BlockEditor({ blocks, onBlocksChange, disabled = false }: BlockE
     }
   };
 
-  const handleAddBlock = async (type: 'BUTTON' | 'FORM' | 'ADDRESS') => {
+  const handleAddBlock = async () => {
+    if (!selectedBlockType) return;
+
     setIsAddingBlock(true);
     try {
       const newBlock: Block = {
-        id: crypto.randomUUID(),
-        type,
-        content: type === 'BUTTON' 
-          ? { label: 'New Button', url: '' } 
-          : type === 'FORM' 
-            ? { 
-                title: 'New Form', 
-                isModal: false, 
-                modalTitle: '',
+        id: Math.random().toString(36).substr(2, 9),
+        type: selectedBlockType,
+        content:
+          selectedBlockType === 'BUTTON'
+            ? {
+                label: '',
+                url: ''
+              }
+            : selectedBlockType === 'FORM'
+            ? {
+                title: '',
                 pipelineId: '',
+                isModal: false,
+                modalTitle: '',
                 successPage: ''
               }
-            : {
+            : selectedBlockType === 'ADDRESS'
+            ? {
                 address: '',
                 city: '',
                 state: '',
                 zipCode: '',
-                country: ''
+                country: '',
+                hasButton: false,
+                buttonLabel: '',
+                buttonUrl: ''
+              }
+            : selectedBlockType === 'WHATSAPP'
+            ? {
+                whatsappNumber: ''
+              }
+            : {
+                // AI_CHAT block
+                buttonTitle: 'Fale com o Dr.',
+                greeting: 'Olá! Como posso ajudar?'
               },
-        order: localBlocks.length,
+        order: localBlocks.length
       };
+
       const updatedBlocks = [...localBlocks, newBlock];
       setLocalBlocks(updatedBlocks);
-      setHasUnsavedChanges(true);
-      toast.success('Block added');
+      onBlocksChange(updatedBlocks);
+
+      toast.success('Bloco adicionado!', {
+        description: `O ${selectedBlockType === 'BUTTON' ? 'botão' : selectedBlockType === 'FORM' ? 'formulário' : selectedBlockType === 'ADDRESS' ? 'endereço' : selectedBlockType === 'WHATSAPP' ? 'WhatsApp Flutuante' : 'chat de IA'} foi adicionado com sucesso.`,
+        duration: 4000,
+        position: 'top-right'
+      });
+    } catch (error) {
+      console.error('Error adding block:', error);
+      toast.error('Erro ao adicionar bloco', {
+        description: 'Ocorreu um erro ao adicionar o bloco. Por favor, tente novamente.',
+        duration: 4000,
+        position: 'top-right'
+      });
     } finally {
       setIsAddingBlock(false);
+      setSelectedBlockType(null);
     }
   };
 
@@ -130,7 +166,7 @@ export function BlockEditor({ blocks, onBlocksChange, disabled = false }: BlockE
       setHasUnsavedChanges(true);
       
       toast.success('Bloco removido!', {
-        description: `O ${blockToDelete.type === 'BUTTON' ? 'botão' : blockToDelete.type === 'FORM' ? 'formulário' : 'endereço'} foi excluído com sucesso.`,
+        description: `O ${blockToDelete.type === 'BUTTON' ? 'botão' : blockToDelete.type === 'FORM' ? 'formulário' : blockToDelete.type === 'ADDRESS' ? 'endereço' : blockToDelete.type === 'WHATSAPP' ? 'WhatsApp Flutuante' : 'chat de IA'} foi excluído com sucesso.`,
         duration: 4000,
         position: 'top-right',
         style: {
@@ -233,41 +269,33 @@ export function BlockEditor({ blocks, onBlocksChange, disabled = false }: BlockE
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         <div className="flex gap-2">
+          <Select
+            value={selectedBlockType || ''}
+            onValueChange={(value: BlockType) => setSelectedBlockType(value)}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Selecione o tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="BUTTON">Botão</SelectItem>
+              <SelectItem value="FORM">Formulário</SelectItem>
+              <SelectItem value="ADDRESS">Endereço</SelectItem>
+              <SelectItem value="AI_CHAT">Chat com IA</SelectItem>
+              <SelectItem value="WHATSAPP">WhatsApp Flutuante</SelectItem>
+            </SelectContent>
+          </Select>
+
           <Button 
-            onClick={() => handleAddBlock('BUTTON')} 
-            variant="outline"
-            disabled={disabled || isAddingBlock}
+            onClick={handleAddBlock} 
+            disabled={!selectedBlockType || isAddingBlock}
+            className="whitespace-nowrap"
           >
             {isAddingBlock ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
               <PlusCircle className="h-4 w-4 mr-2" />
             )}
-            Add Button
-          </Button>
-          <Button 
-            onClick={() => handleAddBlock('FORM')} 
-            variant="outline"
-            disabled={disabled || isAddingBlock}
-          >
-            {isAddingBlock ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <PlusCircle className="h-4 w-4 mr-2" />
-            )}
-            Add Form
-          </Button>
-          <Button 
-            onClick={() => handleAddBlock('ADDRESS')} 
-            variant="outline"
-            disabled={disabled || isAddingBlock}
-          >
-            {isAddingBlock ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <PlusCircle className="h-4 w-4 mr-2" />
-            )}
-            Add Address
+            Adicionar Bloco
           </Button>
         </div>
 
@@ -486,9 +514,10 @@ export function BlockEditor({ blocks, onBlocksChange, disabled = false }: BlockE
                         </p>
                       </div>
                     </div>
-                  ) : (
+                  ) : block.type === 'ADDRESS' ? (
                     <div className="space-y-4">
                       <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-gray-400" />
                         <span className="text-sm font-medium">Address Block</span>
                       </div>
                       <div className="space-y-2">
@@ -560,6 +589,126 @@ export function BlockEditor({ blocks, onBlocksChange, disabled = false }: BlockE
                           }
                           disabled={disabled}
                         />
+                      </div>
+
+                      <div className="flex items-center space-x-2 mt-4">
+                        <input
+                          type="checkbox"
+                          id={`address-button-${block.id}`}
+                          checked={block.content.hasButton}
+                          onChange={(e) =>
+                            handleBlockContentChange(block.id, {
+                              ...block.content,
+                              hasButton: e.target.checked,
+                            })
+                          }
+                          disabled={disabled}
+                          className="h-4 w-4 rounded border-gray-300"
+                        />
+                        <Label htmlFor={`address-button-${block.id}`}>Adicionar botão</Label>
+                      </div>
+
+                      {block.content.hasButton && (
+                        <div className="space-y-4 mt-4 border-t pt-4">
+                          <div className="flex items-center gap-2">
+                            <Link2 className="h-4 w-4 text-gray-400" />
+                            <span className="text-sm font-medium">Botão</span>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor={`button-label-${block.id}`}>Texto do botão</Label>
+                            <Input
+                              id={`button-label-${block.id}`}
+                              value={block.content.buttonLabel || ''}
+                              onChange={(e) =>
+                                handleBlockContentChange(block.id, {
+                                  ...block.content,
+                                  buttonLabel: e.target.value,
+                                })
+                              }
+                              placeholder="Ex: Como chegar"
+                              disabled={disabled}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor={`button-url-${block.id}`}>URL do botão</Label>
+                            <Input
+                              id={`button-url-${block.id}`}
+                              value={block.content.buttonUrl || ''}
+                              onChange={(e) =>
+                                handleBlockContentChange(block.id, {
+                                  ...block.content,
+                                  buttonUrl: e.target.value,
+                                })
+                              }
+                              placeholder="Ex: https://maps.google.com/..."
+                              disabled={disabled}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : block.type === 'WHATSAPP' ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm font-medium">WhatsApp Flutuante</span>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`whatsapp-number-${block.id}`}>Número do WhatsApp</Label>
+                        <Input
+                          id={`whatsapp-number-${block.id}`}
+                          value={block.content.whatsappNumber || ''}
+                          onChange={(e) =>
+                            handleBlockContentChange(block.id, {
+                              ...block.content,
+                              whatsappNumber: e.target.value
+                            })
+                          }
+                          placeholder="Ex: +5511999999999"
+                        />
+                      </div>
+                    </div>
+                  ) : block.type === 'AI_CHAT' ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <MessageCircle className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm font-medium">AI Chat Block</span>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`chat-title-${block.id}`}>Título do Botão</Label>
+                        <Input
+                          id={`chat-title-${block.id}`}
+                          value={block.content.buttonTitle || 'Fale com o Dr.'}
+                          onChange={(e) =>
+                            handleBlockContentChange(block.id, {
+                              ...block.content,
+                              buttonTitle: e.target.value,
+                            })
+                          }
+                          placeholder="Ex: Fale com o Dr."
+                          disabled={disabled}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`chat-greeting-${block.id}`}>Mensagem Inicial</Label>
+                        <Input
+                          id={`chat-greeting-${block.id}`}
+                          value={block.content.greeting || 'Olá! Como posso ajudar?'}
+                          onChange={(e) =>
+                            handleBlockContentChange(block.id, {
+                              ...block.content,
+                              greeting: e.target.value,
+                            })
+                          }
+                          placeholder="Ex: Olá! Como posso ajudar?"
+                          disabled={disabled}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">Unknown Block Type</span>
                       </div>
                     </div>
                   )}
