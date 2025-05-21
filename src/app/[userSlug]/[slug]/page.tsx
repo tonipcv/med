@@ -8,6 +8,8 @@ import MinimalTemplate from '@/components/pages/templates/MinimalTemplate';
 import CollorTemplate from '@/components/pages/templates/CollorTemplate';
 import BentoDarkTemplate from '@/components/pages/templates/BentoDarkTemplate';
 import LightTemplate from '@/components/pages/templates/LightTemplate';
+import NavyTemplate from '@/components/pages/templates/NavyTemplate';
+import BeigeTemplate from '@/components/pages/templates/BeigeTemplate';
 import { ReferralPage } from '@/components/pages';
 import { AiChatWidget } from '@/components/AiChatWidget';
 
@@ -434,10 +436,14 @@ export default async function DynamicPage({ params }: PageProps) {
           return <MinimalTemplate page={pageContent} />;
         case 'collor':
           return <CollorTemplate page={pageContent} />;
-        case 'bentodark':
-          return <BentoDarkTemplate page={pageContent} />;
         case 'light':
           return <LightTemplate page={pageContent} />;
+        case 'bentodark':
+          return <BentoDarkTemplate page={pageContent} />;
+        case 'navy':
+          return <NavyTemplate page={pageContent} />;
+        case 'beige':
+          return <BeigeTemplate page={pageContent} />;
         case 'classic':
         default:
           return <ClassicTemplate page={pageContent} />;
@@ -458,6 +464,10 @@ export default async function DynamicPage({ params }: PageProps) {
           return <BentoDarkTemplate page={pageContent} />;
         case 'light':
           return <LightTemplate page={pageContent} />;
+        case 'navy':
+          return <NavyTemplate page={pageContent} />;
+        case 'beige':
+          return <BeigeTemplate page={pageContent} />;
         case 'classic':
         default:
           return <ClassicTemplate page={pageContent} />;

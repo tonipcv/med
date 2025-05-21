@@ -4,9 +4,10 @@ export interface Service {
   description?: string;
   price: number;
   category?: string;
-  isActive: boolean;
-  createdAt: Date;
-  userId: string;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
+  user_id: string;
 }
 
 export interface CreateServiceInput {
@@ -21,5 +22,5 @@ export interface UpdateServiceInput {
   description?: string;
   price?: number;
   category?: string;
-  isActive?: boolean;
+  is_active?: boolean;
 } 

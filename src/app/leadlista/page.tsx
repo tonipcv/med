@@ -6,14 +6,22 @@ import { Button } from '@/components/ui/button';
 interface Lead {
   id: string;
   name: string;
-  email: string;
-  whatsapp: string;
-  instagram: string | null;
-  area: string;
-  employees: string;
-  revenue: string;
-  useTechnology: string;
+  email: string | null;
+  phone: string;
   status: string;
+  pipelineId: string | null;
+  user_id: string;
+  indicationId: string | null;
+  source: string | null;
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  utmTerm: string | null;
+  utmContent: string | null;
+  potentialValue: number | null;
+  appointmentDate: string | null;
+  medicalNotes: string | null;
+  serviceId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -27,7 +35,7 @@ export default function LeadListPage() {
     const fetchLeads = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/form-submission');
+        const response = await fetch('/api/leads');
         
         if (!response.ok) {
           throw new Error(`Erro ao buscar leads: ${response.status}`);
@@ -52,6 +60,14 @@ export default function LeadListPage() {
     } catch (err) {
       return dateString;
     }
+  };
+
+  const formatValue = (value: number | null) => {
+    if (value === null) return '-';
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
   };
 
   if (loading) {
@@ -87,7 +103,7 @@ export default function LeadListPage() {
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="p-4 md:p-6 bg-blue-600 text-white">
-            <h1 className="text-2xl font-bold">Lista de Leads - Demonstrações</h1>
+            <h1 className="text-2xl font-bold">Lista de Leads</h1>
             <p className="opacity-80">Total: {leads.length} leads</p>
           </div>
           
@@ -110,12 +126,12 @@ export default function LeadListPage() {
                     <tr>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">WhatsApp</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instagram</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Área</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Funcionários</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Faturamento</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telefone</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Origem</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Potencial</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Consulta</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Criado em</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -125,22 +141,29 @@ export default function LeadListPage() {
                           <div className="font-medium text-gray-900">{lead.name}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {lead.email}
+                          {lead.email || '-'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {lead.whatsapp}
+                          {lead.phone}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            lead.status === 'Novo' ? 'bg-blue-100 text-blue-800' :
+                            lead.status === 'Contato' ? 'bg-yellow-100 text-yellow-800' :
+                            lead.status === 'Convertido' ? 'bg-green-100 text-green-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {lead.status}
+                          </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {lead.instagram || '-'}
+                          {lead.source || '-'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {lead.area}
+                          {formatValue(lead.potentialValue)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {lead.employees}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {lead.revenue}
+                          {lead.appointmentDate ? formatDate(lead.appointmentDate) : '-'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {formatDate(lead.createdAt)}

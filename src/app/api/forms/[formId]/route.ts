@@ -56,7 +56,7 @@ export async function PUT(
           placeholder: field.placeholder,
           required: field.required,
           order: field.order,
-          options: field.options,
+          options: field.type === 'select' ? field.options || [] : undefined,
           validation: field.validation
         })) : [],
         settings: {
@@ -73,7 +73,8 @@ export async function PUT(
             background: '#ffffff',
             text: '#000000'
           }
-        } satisfies Record<string, any>
+        } satisfies Record<string, any>,
+        updatedAt: new Date()
       }
     });
 

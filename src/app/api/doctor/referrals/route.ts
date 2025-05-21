@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     // Buscar todas as referências do médico
     const referrals = await prisma.patientReferral.findMany({
       where: {
-        patient: {
+        page: {
           userId: session.user.id
         }
       },
@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
         },
         page: {
           select: {
+            id: true,
             title: true,
             slug: true
           }
@@ -39,38 +40,33 @@ export async function GET(req: NextRequest) {
             title: true,
             type: true,
             unlockedAt: true,
-            page: {
-              select: {
-                title: true
-              }
-            },
             textContent: true
           }
         }
       },
       orderBy: {
-        leads: 'desc'
+        createdAt: 'desc'
       }
     });
 
     // Formatar resposta
     const formattedReferrals = referrals.map(referral => ({
       id: referral.id,
+      slug: referral.slug,
       patient: referral.patient,
       page: referral.page,
-      slug: referral.slug,
       stats: {
         visits: referral.visits,
         leads: referral.leads,
         sales: referral.sales
       },
-      unlockedRewards: referral.rewards
-        .filter(r => r.unlockedAt)
-        .map(r => ({
-          title: r.title,
-          type: r.type,
-          content: r.type === 'PAGE' ? r.page?.title : r.textContent
-        }))
+      rewards: referral.rewards.map(reward => ({
+        id: reward.id,
+        title: reward.title,
+        type: reward.type,
+        unlockedAt: reward.unlockedAt,
+        content: reward.textContent
+      }))
     }));
 
     // Agrupar estatísticas
@@ -115,21 +111,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verificar se o paciente pertence ao usuário
-    const patient = await prisma.patient.findFirst({
-      where: {
-        id: patientId,
-        userId: session.user.id
-      }
-    });
-
-    if (!patient) {
-      return NextResponse.json(
-        { error: 'Paciente não encontrado' },
-        { status: 404 }
-      );
-    }
-
     // Verificar se a página pertence ao usuário
     const page = await prisma.page.findFirst({
       where: {
@@ -141,6 +122,18 @@ export async function POST(req: NextRequest) {
     if (!page) {
       return NextResponse.json(
         { error: 'Página não encontrada' },
+        { status: 404 }
+      );
+    }
+
+    // Verificar se o paciente existe
+    const patient = await prisma.patient.findUnique({
+      where: { id: patientId }
+    });
+
+    if (!patient) {
+      return NextResponse.json(
+        { error: 'Paciente não encontrado' },
         { status: 404 }
       );
     }
@@ -163,12 +156,14 @@ export async function POST(req: NextRequest) {
     // Criar referência
     const referral = await prisma.patientReferral.create({
       data: {
+        id: nanoid(),
         slug: nanoid(10),
         pageId,
         patientId,
         visits: 0,
         leads: 0,
-        sales: 0
+        sales: 0,
+        updatedAt: new Date()
       },
       include: {
         patient: {
@@ -191,9 +186,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       id: referral.id,
+      slug: referral.slug,
       patient: referral.patient,
       page: referral.page,
-      slug: referral.slug,
       stats: {
         visits: referral.visits,
         leads: referral.leads,
@@ -201,7 +196,7 @@ export async function POST(req: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('Erro ao criar referência:', error);
+    console.error('Erro ao criar referral:', error);
     return NextResponse.json(
       { error: 'Erro ao processar solicitação' },
       { status: 500 }

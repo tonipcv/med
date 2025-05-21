@@ -66,7 +66,7 @@ export default function ServicesPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ isActive: !currentStatus }),
+        body: JSON.stringify({ is_active: !currentStatus }),
       });
 
       if (response.ok) {
@@ -175,12 +175,12 @@ export default function ServicesPage() {
                           <Badge
                             variant="outline"
                             className={cn(
-                              service.isActive
+                              service.is_active
                                 ? "bg-green-50 text-green-600 border-green-200"
                                 : "bg-red-50 text-red-600 border-red-200"
                             )}
                           >
-                            {service.isActive ? 'Ativo' : 'Inativo'}
+                            {service.is_active ? 'Ativo' : 'Inativo'}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
@@ -189,9 +189,9 @@ export default function ServicesPage() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 hover:bg-gray-100"
-                            onClick={() => handleToggleActive(service.id, service.isActive)}
-                          >
-                              {service.isActive ? (
+                              onClick={() => handleToggleActive(service.id, service.is_active)}
+                            >
+                              {service.is_active ? (
                                 <XCircleIcon className="h-4 w-4 text-gray-500" />
                               ) : (
                                 <CheckCircleIcon className="h-4 w-4 text-gray-500" />

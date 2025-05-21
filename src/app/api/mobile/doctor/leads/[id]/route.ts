@@ -23,7 +23,7 @@ export async function GET(
 
   try {
     // Buscar lead específico
-    const lead = await prisma.lead.findUnique({
+    const lead = await prisma.leads.findUnique({
       where: { id },
       include: { indication: true }
     });
@@ -36,7 +36,7 @@ export async function GET(
     }
 
     // Verificar se o lead pertence ao médico autenticado
-    if (lead.userId !== validation.user.id) {
+    if (lead.user_id !== validation.user.id) {
       return NextResponse.json(
         { error: "Acesso negado" },
         { status: 403 }
@@ -72,7 +72,7 @@ export async function PUT(
 
   try {
     // Verificar se o lead existe e pertence ao médico
-    const existingLead = await prisma.lead.findUnique({
+    const existingLead = await prisma.leads.findUnique({
       where: { id }
     });
 
@@ -83,7 +83,7 @@ export async function PUT(
       );
     }
 
-    if (existingLead.userId !== validation.user.id) {
+    if (existingLead.user_id !== validation.user.id) {
       return NextResponse.json(
         { error: "Acesso negado" },
         { status: 403 }
@@ -93,7 +93,7 @@ export async function PUT(
     const data = await request.json();
 
     // Atualizar o lead
-    const updatedLead = await prisma.lead.update({
+    const updatedLead = await prisma.leads.update({
       where: { id },
       data: {
         name: data.name || undefined,
@@ -108,7 +108,8 @@ export async function PUT(
         utmMedium: data.utmMedium !== undefined ? data.utmMedium : undefined,
         utmCampaign: data.utmCampaign !== undefined ? data.utmCampaign : undefined,
         utmTerm: data.utmTerm !== undefined ? data.utmTerm : undefined,
-        utmContent: data.utmContent !== undefined ? data.utmContent : undefined
+        utmContent: data.utmContent !== undefined ? data.utmContent : undefined,
+        updatedAt: new Date()
       },
       include: {
         indication: true
@@ -144,7 +145,7 @@ export async function DELETE(
 
   try {
     // Verificar se o lead existe e pertence ao médico
-    const lead = await prisma.lead.findUnique({
+    const lead = await prisma.leads.findUnique({
       where: { id }
     });
 
@@ -155,7 +156,7 @@ export async function DELETE(
       );
     }
 
-    if (lead.userId !== validation.user.id) {
+    if (lead.user_id !== validation.user.id) {
       return NextResponse.json(
         { error: "Acesso negado" },
         { status: 403 }
@@ -163,7 +164,7 @@ export async function DELETE(
     }
 
     // Excluir o lead
-    await prisma.lead.delete({
+    await prisma.leads.delete({
       where: { id }
     });
 

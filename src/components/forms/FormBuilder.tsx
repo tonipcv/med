@@ -10,7 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { PlusCircle, GripVertical, Trash2, Settings2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface FormBuilderProps {
   initialData?: Partial<Form>;
@@ -46,7 +48,8 @@ export function FormBuilder({ initialData, onSave }: FormBuilderProps) {
       label: `Novo campo ${type}`,
       required: false,
       order: formData.fields?.length || 0,
-      placeholder: '',
+      placeholder: type === 'select' ? 'Selecione uma opção...' : '',
+      options: type === 'select' ? [{ label: 'Opção 1', value: 'opcao_1' }] : undefined,
       validation: {
         minLength: type === 'text' ? 2 : undefined,
         maxLength: type === 'text' ? 100 : undefined,
@@ -154,7 +157,18 @@ export function FormBuilder({ initialData, onSave }: FormBuilderProps) {
     if (!validateForm()) return;
 
     try {
-      await onSave(formData);
+      // Ensure all fields are properly ordered and options are properly set
+      const orderedFields = formData.fields?.map((field, index) => ({
+        ...field,
+        order: index,
+        options: field.type === 'select' ? field.options : undefined
+      }));
+
+      await onSave({
+        ...formData,
+        fields: orderedFields,
+        updatedAt: new Date()
+      });
       toast.success('Formulário salvo com sucesso!');
     } catch (error) {
       console.error('Error saving form:', error);
@@ -261,12 +275,72 @@ export function FormBuilder({ initialData, onSave }: FormBuilderProps) {
                               <div {...provided.dragHandleProps}>
                                 <GripVertical className="h-5 w-5 text-gray-400" />
                               </div>
-                              <div className="flex-1">
+                              <div className="flex-1 space-y-4">
                                 <Input
                                   value={field.label}
                                   onChange={(e) => handleFieldChange(field.id, { label: e.target.value })}
                                   placeholder="Nome do campo"
                                 />
+                                <Input
+                                  value={field.placeholder || ''}
+                                  onChange={(e) => handleFieldChange(field.id, { placeholder: e.target.value })}
+                                  placeholder="Placeholder do campo"
+                                />
+                                {field.type === 'select' && (
+                                  <div className="space-y-2">
+                                    <Label>Opções</Label>
+                                    <div className="space-y-2">
+                                      {field.options?.map((option, optionIndex) => (
+                                        <div key={optionIndex} className="flex items-center gap-2">
+                                          <Input
+                                            value={option.label}
+                                            onChange={(e) => {
+                                              const newOptions = [...(field.options || [])];
+                                              newOptions[optionIndex] = {
+                                                ...newOptions[optionIndex],
+                                                label: e.target.value,
+                                                value: e.target.value.toLowerCase().replace(/\s+/g, '_')
+                                              };
+                                              handleFieldChange(field.id, { options: newOptions });
+                                            }}
+                                            placeholder="Nome da opção"
+                                          />
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => {
+                                              const newOptions = field.options?.filter((_, i) => i !== optionIndex) || [];
+                                              handleFieldChange(field.id, { options: newOptions });
+                                            }}
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                      ))}
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          const newOptions = [...(field.options || []), { label: '', value: '' }];
+                                          handleFieldChange(field.id, { options: newOptions });
+                                        }}
+                                      >
+                                        <PlusCircle className="h-4 w-4 mr-2" />
+                                        Adicionar Opção
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    id={`required-${field.id}`}
+                                    checked={field.required}
+                                    onChange={(e) => handleFieldChange(field.id, { required: e.target.checked })}
+                                    className="rounded border-gray-300"
+                                  />
+                                  <Label htmlFor={`required-${field.id}`}>Campo obrigatório</Label>
+                                </div>
                               </div>
                               <Button
                                 variant="ghost"

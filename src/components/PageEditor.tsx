@@ -488,6 +488,8 @@ export function PageEditor({ pageId }: PageEditorProps) {
                       <SelectItem value="collor">Collor</SelectItem>
                       <SelectItem value="bentodark">Bento Dark</SelectItem>
                       <SelectItem value="light">Light</SelectItem>
+                      <SelectItem value="navy">Navy</SelectItem>
+                      <SelectItem value="beige">Beige</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-gray-500">

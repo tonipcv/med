@@ -28,6 +28,7 @@ export async function POST(request: Request) {
     // Create form with proper JSON serialization
     const form = await prisma.form.create({
       data: {
+        id: `form_${Date.now()}`,
         name: formData.name,
         title: formData.name, // Required by schema
         description: formData.description,
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
           placeholder: field.placeholder,
           required: field.required,
           order: field.order,
-          options: field.options,
+          options: field.type === 'select' ? field.options || [] : undefined,
           validation: field.validation
         })) : [],
         settings: {
@@ -61,7 +62,9 @@ export async function POST(request: Request) {
           averageCompletionTime: 0,
           lastUsed: new Date()
         },
-        createdBy: session.user.id
+        createdBy: session.user.id,
+        updatedAt: new Date(),
+        isPublic: formData.isPublic ?? false
       }
     });
 

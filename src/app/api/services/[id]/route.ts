@@ -11,10 +11,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const service = await prisma.service.findFirst({
+    const service = await prisma.services.findFirst({
       where: {
         id: params.id,
-        userId: session.user.id
+        user_id: session.user.id
       }
     });
 
@@ -38,13 +38,13 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
 
     const body = await request.json();
-    const { name, description, price, category, isActive } = body;
+    const { name, description, price, category, is_active } = body;
 
     // Verifica se o serviço existe e pertence ao usuário
-    const existingService = await prisma.service.findFirst({
+    const existingService = await prisma.services.findFirst({
       where: {
         id: params.id,
-        userId: session.user.id
+        user_id: session.user.id
       }
     });
 
@@ -52,7 +52,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       return NextResponse.json({ error: 'Service not found' }, { status: 404 });
     }
 
-    const service = await prisma.service.update({
+    const service = await prisma.services.update({
       where: {
         id: params.id
       },
@@ -61,7 +61,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         description: description !== undefined ? description : undefined,
         price: price !== undefined ? parseFloat(price) : undefined,
         category: category !== undefined ? category : undefined,
-        isActive: isActive !== undefined ? isActive : undefined
+        is_active: is_active !== undefined ? is_active : undefined,
+        updated_at: new Date()
       }
     });
 
@@ -81,10 +82,10 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     }
 
     // Verifica se o serviço existe e pertence ao usuário
-    const existingService = await prisma.service.findFirst({
+    const existingService = await prisma.services.findFirst({
       where: {
         id: params.id,
-        userId: session.user.id
+        user_id: session.user.id
       }
     });
 
@@ -92,7 +93,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       return NextResponse.json({ error: 'Service not found' }, { status: 404 });
     }
 
-    await prisma.service.delete({
+    await prisma.services.delete({
       where: {
         id: params.id
       }

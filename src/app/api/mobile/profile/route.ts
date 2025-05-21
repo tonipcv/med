@@ -70,9 +70,9 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    const leadsCount = await prisma.lead.count({
+    const leadsCount = await prisma.leads.count({
       where: {
-        userId,
+        user_id: userId,
         createdAt: { gte: lastMonth }
       }
     });

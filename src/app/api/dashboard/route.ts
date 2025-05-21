@@ -44,9 +44,9 @@ export async function GET(req: NextRequest) {
     }
 
     // Buscar contagem de leads
-    const totalLeads = await prisma.lead.count({
+    const totalLeads = await prisma.leads.count({
       where: { 
-        userId,
+        user_id: userId,
         status: {
           not: 'Removido'
         }
@@ -72,8 +72,8 @@ export async function GET(req: NextRequest) {
       : 0;
 
     // Buscar leads recentes (últimos 5)
-    const recentLeads = await prisma.lead.findMany({
-      where: { userId },
+    const recentLeads = await prisma.leads.findMany({
+      where: { user_id: userId },
       orderBy: { createdAt: 'desc' },
       take: 5,
       include: {
@@ -110,17 +110,17 @@ export async function GET(req: NextRequest) {
     // Buscar as origens de tráfego mais comuns
     const topSourcesRaw = await prisma.$queryRaw`
       SELECT "utmSource" as "source", COUNT(*) as "count"
-      FROM "public"."Lead"
-      WHERE "userId" = ${userId} AND "utmSource" IS NOT NULL
+      FROM "public"."leads"
+      WHERE "user_id" = ${userId} AND "utmSource" IS NOT NULL
       GROUP BY "utmSource"
       ORDER BY "count" DESC
       LIMIT 5
     `;
 
     // Calcular faturamento total (soma do potentialValue dos leads fechados)
-    const closedLeadsData = await prisma.lead.aggregate({
+    const closedLeadsData = await prisma.leads.aggregate({
       where: { 
-        userId,
+        user_id: userId,
         status: 'Fechado',
         potentialValue: { not: null }
       },
@@ -130,9 +130,9 @@ export async function GET(req: NextRequest) {
     });
     
     // Calcular potencial em aberto (soma do potentialValue dos leads não fechados)
-    const openLeadsData = await prisma.lead.aggregate({
+    const openLeadsData = await prisma.leads.aggregate({
       where: { 
-        userId,
+        user_id: userId,
         NOT: { status: 'Fechado' },
         potentialValue: { not: null }
       },

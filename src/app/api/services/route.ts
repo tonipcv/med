@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import crypto from 'crypto';
 
 // GET /api/services - Lista todos os serviços do médico
 export async function GET() {
@@ -11,12 +12,12 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const services = await prisma.service.findMany({
+    const services = await prisma.services.findMany({
       where: {
-        userId: session.user.id
+        user_id: session.user.id
       },
       orderBy: {
-        createdAt: 'desc'
+        created_at: 'desc'
       }
     });
 
@@ -42,13 +43,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Name and price are required' }, { status: 400 });
     }
 
-    const service = await prisma.service.create({
+    const service = await prisma.services.create({
       data: {
+        id: crypto.randomUUID(),
         name,
         description,
         price: parseFloat(price),
         category,
-        userId: session.user.id
+        user_id: session.user.id,
+        is_active: true,
+        updated_at: new Date()
       }
     });
 

@@ -21,28 +21,28 @@ export function MultiStepModal({ isOpen, onClose, block }: MultiStepModalProps) 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={cn(
-        "sm:max-w-[600px] max-h-[85vh] overflow-y-auto p-0 bg-white border border-gray-100 shadow-lg",
+        "sm:max-w-[600px] max-h-[85vh] overflow-y-auto p-0 bg-black/90 border border-zinc-800 shadow-lg",
         modalSize === 'large' ? "md:max-w-[800px]" : "md:max-w-[600px]",
       )}>
         {/* Progress Bar */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gray-100 rounded-t-lg overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-zinc-800 rounded-t-lg overflow-hidden">
           <div 
-            className="h-full bg-gradient-to-r from-gray-200 to-gray-300 transition-all duration-300"
+            className="h-full bg-gradient-to-r from-zinc-600 to-zinc-700 transition-all duration-300"
             style={{ width: '50%' }}
           />
         </div>
 
         <div className="flex items-center justify-between mb-4 mt-4 px-4">
-          <h2 className="text-lg font-medium tracking-tight text-gray-900">
+          <h2 className="text-lg font-medium tracking-tight text-white">
             {block.content.modalTitle || block.content.label}
           </h2>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="rounded-full hover:bg-gray-100"
+            className="rounded-full hover:bg-zinc-800"
           >
-            <X className="h-4 w-4 text-gray-500" />
+            <X className="h-4 w-4 text-zinc-400" />
           </Button>
         </div>
 
@@ -55,10 +55,10 @@ export function MultiStepModal({ isOpen, onClose, block }: MultiStepModalProps) 
               key={subButton.id}
               asChild
               className={cn(
-                "w-full p-3 h-auto text-center flex flex-col items-center justify-center gap-3",
-                "bg-gray-50 hover:bg-gray-100 text-gray-900",
-                "shadow-sm hover:shadow transition-all duration-300",
-                "rounded-xl overflow-hidden border border-gray-200",
+                "w-full p-6 h-auto text-center flex flex-col items-center justify-center gap-3",
+                "bg-zinc-800/50 hover:bg-zinc-800 text-white",
+                "shadow-sm hover:shadow-lg transition-all duration-300",
+                "rounded-xl overflow-hidden border border-zinc-700/50",
                 subButton.color && `hover:border-${subButton.color}-500`
               )}
             >
@@ -72,23 +72,23 @@ export function MultiStepModal({ isOpen, onClose, block }: MultiStepModalProps) 
                   {showIcons && subButton.icon && (
                     <div className={cn(
                       "flex-shrink-0 p-2 rounded-lg",
-                      subButton.color ? `bg-${subButton.color}-50 text-${subButton.color}-600` : "bg-gray-100 text-gray-600"
+                      subButton.color ? `bg-${subButton.color}-800/50 text-${subButton.color}-400` : "bg-zinc-700/50 text-zinc-400"
                     )}>
                       <span className="text-xl">{subButton.icon}</span>
                     </div>
                   )}
                   <div className="flex-1 text-center w-full">
-                    <h3 className="text-base font-medium text-gray-900 mb-1">
+                    <h3 className="text-base font-light text-white mb-1">
                       {subButton.label}
                     </h3>
                     {showDescriptions && subButton.description && (
-                      <p className="text-sm text-gray-500 line-clamp-2">
+                      <p className="text-sm text-zinc-400 font-light line-clamp-2">
                         {subButton.description}
                       </p>
                     )}
                   </div>
                   {subButton.isExternal && (
-                    <ArrowUpRight className="h-4 w-4 text-gray-400 mt-1" />
+                    <ArrowUpRight className="h-4 w-4 text-zinc-400 mt-1" />
                   )}
                 </div>
               </a>

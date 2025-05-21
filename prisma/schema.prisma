@@ -8,108 +8,8 @@ datasource db {
   relationMode = "prisma"
 }
 
-model User {
-  id                     String           @id @default(cuid())
-  name                   String
-  slug                   String           @unique
-  specialty              String?
-  email                  String           @unique
-  password               String
-  phone                  String?
-  emailVerified          DateTime?
-  image                  String?
-  resetToken             String?
-  resetTokenExpiry       DateTime?
-  verificationCode       String?
-  verificationCodeExpiry DateTime?
-  createdAt              DateTime         @default(now())
-  plan                   String?
-  planExpiresAt          DateTime?
-  pageTemplate           String           @default("default")
-  isPremium              Boolean          @default(false)
-  premiumSince           DateTime?
-  planStatus             String?          @default("inactive")
-  planUpdatedAt          DateTime?
-  accounts               Account[]
-  events                 Event[]
-  indications            Indication[]
-  interestOptions        InterestOption[]
-  leads                  Lead[]
-  patients               Patient[]
-  paymentLinks           PaymentLink[]
-  sessions               Session[]
-  pages                  Page[]
-  pipelines              Pipeline[]
-  services               Service[]
-  conversations          Conversation[]
-  forms                  Form[]
-}
-
-model Indication {
-  id        String   @id @default(cuid())
-  slug      String
-  name      String?
-  userId    String
-  createdAt DateTime @default(now())
-  fullLink  String?
-  patientId String?
-  type      String   @default("regular")
-  events    Event[]
-  patient   Patient? @relation(fields: [patientId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  user      User     @relation(fields: [userId], references: [id])
-  leads     Lead[]
-}
-
-model Lead {
-  id              String      @id @default(cuid())
-  name            String
-  phone           String
-  interest        String?
-  userId          String
-  indicationId    String?
-  source          String?
-  utmSource       String?
-  utmMedium       String?
-  utmCampaign     String?
-  utmTerm         String?
-  utmContent      String?
-  status          String?     @default("Novo")
-  potentialValue  Float?
-  appointmentDate DateTime?
-  medicalNotes    String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @default(now()) @updatedAt
-  pipelineId      String?
-  email           String?
-  serviceId       String?
-  user            User        @relation(fields: [userId], references: [id])
-  indication      Indication? @relation(fields: [indicationId], references: [id])
-  pipeline        Pipeline?   @relation(fields: [pipelineId], references: [id])
-  patient         Patient?
-  service         Service?    @relation(fields: [serviceId], references: [id])
-
-  @@index([pipelineId])
-}
-
-model Event {
-  id           String      @id @default(cuid())
-  userId       String
-  indicationId String?
-  type         String
-  ip           String?
-  userAgent    String?
-  utmSource    String?
-  utmMedium    String?
-  utmCampaign  String?
-  utmTerm      String?
-  utmContent   String?
-  createdAt    DateTime    @default(now())
-  indication   Indication? @relation(fields: [indicationId], references: [id])
-  user         User        @relation(fields: [userId], references: [id])
-}
-
 model Account {
-  id                String  @id @default(cuid())
+  id                String  @id
   userId            String
   type              String
   provider          String
@@ -121,29 +21,121 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
 
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Conversation {
+  id        String   @id
+  sessionId String   @unique
+  doctorId  String
+  patientId String?
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+
+  @@index([doctorId])
+  @@index([patientId])
 }
 
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
+model Event {
+  id           String   @id
+  userId       String
+  indicationId String?
+  type         String
+  ip           String?
+  userAgent    String?
+  utmSource    String?
+  utmMedium    String?
+  utmCampaign  String?
+  utmTerm      String?
+  utmContent   String?
+  createdAt    DateTime @default(now())
+  indication   Indication? @relation(fields: [indicationId], references: [id])
+}
 
-  @@unique([identifier, token])
+model Form {
+  id          String   @id
+  name        String
+  description String?
+  createdBy   String
+  isPublic    Boolean  @default(false)
+  category    String?
+  fields      Json[]
+  settings    Json
+  style       Json
+  stats       Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+  title       String
+
+  @@index([createdBy])
+}
+
+model FormBlock {
+  id      String @id
+  formId  String
+  type    String
+  content Json
+  order   Int    @default(0)
+
+  @@index([formId])
+}
+
+model FormSubmission {
+  id        String   @id
+  formId    String
+  data      Json
+  metadata  Json
+  createdAt DateTime @default(now())
+
+  @@index([formId])
+}
+
+model Indication {
+  id        String   @id
+  slug      String
+  name      String?
+  userId    String
+  createdAt DateTime @default(now())
+  fullLink  String?
+  patientId String?
+  type      String   @default("regular")
+  leads     leads[]
+  user      User     @relation(fields: [userId], references: [id])
+  events    Event[]
+}
+
+model InsideSalesLead {
+  id            String   @id
+  name          String
+  email         String
+  whatsapp      String
+  instagram     String?
+  area          String
+  employees     String
+  revenue       String
+  useTechnology String
+  status        String   @default("new")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now())
+}
+
+model InterestOption {
+  id          String   @id
+  label       String
+  value       String
+  redirectUrl String?
+  isDefault   Boolean  @default(false)
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+
+  @@unique([userId, value])
 }
 
 model LeadForm {
-  id            String    @id @default(cuid())
+  id            String    @id
   name          String
   email         String
   whatsapp      String
@@ -156,66 +148,108 @@ model LeadForm {
   notes         String?
   followUpDate  DateTime?
   createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  updatedAt     DateTime
 }
 
-model InsideSalesLead {
-  id            String   @id @default(cuid())
-  name          String
-  email         String
-  whatsapp      String
-  instagram     String?
-  area          String
-  employees     String
-  revenue       String
-  useTechnology String
-  status        String   @default("new")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @default(now()) @updatedAt
+model Message {
+  id             String   @id
+  conversationId String
+  role           String
+  content        String
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  @@index([conversationId])
 }
 
-model InterestOption {
-  id          String   @id @default(cuid())
-  label       String
-  value       String
-  redirectUrl String?
-  isDefault   Boolean  @default(false)
-  userId      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Page {
+  id           String   @id
+  userId       String
+  slug         String   @unique
+  title        String
+  subtitle     String?
+  avatarUrl    String?
+  primaryColor String   @default("#0070df")
+  layout       String   @default("classic")
+  formId       String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+  isModal      Boolean  @default(false)
+  serviceId    String?
+  address      String?
+  blocks       PageBlock[]
+  socialLinks  SocialLink[]
+  user         User     @relation(fields: [userId], references: [id])
+  referrals    PatientReferral[]
 
-  @@unique([userId, value])
+  @@index([userId])
+}
+
+model PageAddress {
+  id        String   @id
+  pageId    String
+  name      String
+  address   String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+
+  @@index([pageId])
+}
+
+model PageBlock {
+  id      String @id
+  pageId  String
+  type    String
+  content Json
+  order   Int    @default(0)
+  page    Page   @relation(fields: [pageId], references: [id])
+
+  @@index([pageId])
 }
 
 model Patient {
-  id                String            @id @default(cuid())
+  id                String    @id
   name              String
-  email             String            @unique
+  email             String    @unique
   phone             String
   userId            String?
-  leadId            String?           @unique
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  leadId            String?   @unique
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime
   accessToken       String?
   accessTokenExpiry DateTime?
-  hasPassword       Boolean           @default(false)
+  hasPassword       Boolean   @default(false)
   password          String?
-  firstAccess       Boolean           @default(true)
-  hasPortalAccess   Boolean           @default(false)
-  welcomeEmailSent  Boolean           @default(false)
+  firstAccess       Boolean   @default(true)
+  hasPortalAccess   Boolean   @default(false)
+  welcomeEmailSent  Boolean   @default(false)
   resetToken        String?
   resetTokenExpiry  DateTime?
-  hasActiveProducts Boolean           @default(false)
-  indications       Indication[]
+  hasActiveProducts Boolean   @default(false)
   referrals         PatientReferral[]
-  lead              Lead?             @relation(fields: [leadId], references: [id])
-  user              User?             @relation(fields: [userId], references: [id])
-  conversations     Conversation[]
+}
+
+model PatientReferral {
+  id        String   @id
+  slug      String   @unique
+  pageId    String
+  patientId String
+  visits    Int      @default(0)
+  leads     Int      @default(0)
+  sales     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  patient   Patient  @relation(fields: [patientId], references: [id])
+  page      Page     @relation(fields: [pageId], references: [id])
+  rewards   ReferralReward[]
+
+  @@index([pageId])
+  @@index([patientId])
 }
 
 model PaymentLink {
-  id            String    @id @default(cuid())
+  id            String    @id
   userId        String
   planId        String
   externalId    String    @unique
@@ -224,106 +258,13 @@ model PaymentLink {
   transactionId String?
   createdAt     DateTime  @default(now())
   paidAt        DateTime?
-  user          User      @relation(fields: [userId], references: [id])
 
   @@index([userId])
 }
 
-model Page {
-  id           String            @id @default(cuid())
-  userId       String
-  slug         String            @unique
-  title        String
-  subtitle     String?
-  avatarUrl    String?
-  address      String?           // Mantido para compatibilidade com versão anterior
-  primaryColor String            @default("#0070df")
-  layout       String            @default("classic")
-  formId       String?
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  isModal      Boolean           @default(false)
-  serviceId    String?
-  blocks       PageBlock[]
-  socialLinks  SocialLink[]
-  addresses    PageAddress[]     // Relação com o novo modelo de endereços
-  user         User              @relation(fields: [userId], references: [id])
-  referrals    PatientReferral[]
-  rewards      ReferralReward[]
-  service      Service?          @relation(fields: [serviceId], references: [id])
-
-  @@index([userId])
-}
-
-model PageAddress {
-  id        String   @id @default(cuid())
-  pageId    String
-  name      String   // Nome do local (ex: "Consultório Principal", "Filial Centro")
-  address   String   // Endereço completo
-  isDefault Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
-
-  @@index([pageId])
-}
-
-model PageBlock {
-  id      String @id @default(cuid())
-  pageId  String
-  type    String // 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT'
-  content Json
-  order   Int    @default(0)
-  page    Page   @relation(fields: [pageId], references: [id], onDelete: Cascade)
-
-  @@index([pageId])
-}
-
-model SocialLink {
-  id       String @id @default(cuid())
-  pageId   String
-  platform String
-  username String
-  url      String
-  page     Page   @relation(fields: [pageId], references: [id], onDelete: Cascade)
-
-  @@index([pageId])
-}
-
-model Pipeline {
-  id          String   @id @default(dbgenerated("gen_random_uuid()"))
-  name        String
-  description String?
-  userId      String
-  columns     Json     @default("[{\"id\": \"novos\", \"title\": \"Novos\"}, {\"id\": \"agendados\", \"title\": \"Agendados\"}, {\"id\": \"compareceram\", \"title\": \"Compareceram\"}, {\"id\": \"fechados\", \"title\": \"Fechados\"}, {\"id\": \"naoVieram\", \"title\": \"Não vieram\"}]")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now()) @updatedAt
-  user        User     @relation(fields: [userId], references: [id])
-  leads       Lead[]
-
-  @@index([userId])
-}
-
-model PatientReferral {
-  id        String           @id @default(cuid())
-  slug      String           @unique
-  pageId    String
-  patientId String
-  visits    Int              @default(0)
-  leads     Int              @default(0)
-  sales     Int              @default(0)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-  page      Page             @relation(fields: [pageId], references: [id])
-  patient   Patient          @relation(fields: [patientId], references: [id])
-  rewards   ReferralReward[]
-
-  @@index([pageId])
-  @@index([patientId])
-}
-
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model ReferralReward {
-  id          String          @id @default(cuid())
+  id          String         @id
   referralId  String
   type        RewardType
   title       String
@@ -333,32 +274,185 @@ model ReferralReward {
   pageId      String?
   textContent String?
   unlockedAt  DateTime?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime
   serviceId   String?
   referral    PatientReferral @relation(fields: [referralId], references: [id])
-  page        Page?           @relation(fields: [pageId], references: [id])
-  service     Service?        @relation(fields: [serviceId], references: [id])
 
+  @@index([pageId])
   @@index([referralId])
+}
+
+model Session {
+  id           String   @id
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+}
+
+model SocialLink {
+  id       String @id
+  pageId   String
+  platform String
+  username String
+  url      String
+  page     Page   @relation(fields: [pageId], references: [id])
+
   @@index([pageId])
 }
 
-model Service {
-  id          String           @id @default(cuid())
+model User {
+  id                     String    @id
+  name                   String
+  slug                   String    @unique
+  specialty              String?
+  email                  String    @unique
+  password               String
+  phone                  String?
+  emailVerified          DateTime?
+  image                  String?
+  resetToken             String?
+  resetTokenExpiry       DateTime?
+  verificationCode       String?
+  verificationCodeExpiry DateTime?
+  createdAt              DateTime  @default(now())
+  plan                   String?
+  planExpiresAt          DateTime?
+  pageTemplate           String    @default("default")
+  isPremium              Boolean   @default(false)
+  premiumSince           DateTime?
+  planStatus             String?   @default("inactive")
+  planUpdatedAt          DateTime?
+  leads                  leads[]
+  indications           Indication[]
+  pages                 Page[]
+  pipelines            pipelines[]
+
+  @@index([email], map: "user_email_idx")
+  @@index([slug], map: "user_slug_idx")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model leads {
+  id              String    @id
+  name            String
+  email           String?
+  phone           String
+  status          String    @default("Novo")
+  pipelineId      String?
+  user_id         String
+  indicationId    String?
+  source          String?
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  utmTerm         String?
+  utmContent      String?
+  potentialValue  Float?
+  appointmentDate DateTime?
+  medicalNotes    String?
+  serviceId       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now())
+  indication      Indication? @relation(fields: [indicationId], references: [id])
+  user            User       @relation(fields: [user_id], references: [id])
+  pipeline        pipelines? @relation(fields: [pipelineId], references: [id])
+
+  @@index([createdAt])
+  @@index([indicationId])
+  @@index([pipelineId])
+  @@index([status])
+  @@index([user_id])
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model leads_backup_clean {
+  id              String?
+  name            String?
+  email           String?
+  phone           String?
+  status          String?
+  pipelineId      String?
+  user_id         String?
+  indicationId    String?
+  source          String?
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  utmTerm         String?
+  utmContent      String?
+  potentialValue  Float?
+  appointmentDate DateTime?
+  medicalNotes    String?
+  serviceId       String?
+  createdAt       DateTime?
+  updatedAt       DateTime?
+
+  @@ignore
+}
+
+model leads_old_final {
+  id              String    @id(map: "leads_new_pkey")
+  name            String
+  email           String?
+  phone           String
+  status          String    @default("Novo")
+  pipelineId      String?
+  user_id         String
+  indicationId    String?
+  source          String?
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  utmTerm         String?
+  utmContent      String?
+  potentialValue  Float?
+  appointmentDate DateTime?
+  medicalNotes    String?
+  serviceId       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now())
+
+  @@index([createdAt], map: "leads_new_createdAt_idx")
+  @@index([indicationId], map: "leads_new_indicationId_idx")
+  @@index([pipelineId], map: "leads_new_pipelineId_idx")
+  @@index([status], map: "leads_new_status_idx")
+  @@index([user_id], map: "leads_new_user_id_idx")
+}
+
+model pipelines {
+  id          String   @id @default(dbgenerated("gen_random_uuid()"))
   name        String
   description String?
-  price       Float
-  category    String?
-  isActive    Boolean          @default(true)
-  createdAt   DateTime         @default(now())
-  userId      String
-  user        User             @relation(fields: [userId], references: [id])
-  leads       Lead[]
-  rewards     ReferralReward[]
-  pageForms   Page[]
+  user_id     String
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @db.Timestamp(6)
+  columns     Json?    @default("[{\"id\": \"novos\", \"title\": \"Novos\"}, {\"id\": \"agendados\", \"title\": \"Agendados\"}, {\"id\": \"compareceram\", \"title\": \"Compareceram\"}, {\"id\": \"fechados\", \"title\": \"Fechados\"}, {\"id\": \"naoVieram\", \"title\": \"Não vieram\"}]")
+  user        User     @relation(fields: [user_id], references: [id])
+  leads       leads[]
 
-  @@index([userId])
+  @@index([user_id], map: "pipeline_user_id_idx")
+}
+
+model services {
+  id          String   @id
+  name        String
+  description String?
+  price       Float?
+  category    String?
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @db.Timestamp(6)
+  user_id     String
+
+  @@index([user_id], map: "service_user_id_idx")
 }
 
 enum RewardType {
@@ -369,75 +463,4 @@ enum RewardType {
 enum reward_type {
   PAGE
   TEXT
-}
-
-model Conversation {
-  id            String    @id @default(cuid())
-  sessionId     String    @unique
-  doctorId      String
-  patientId     String?
-  status        String    @default("active")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  doctor        User      @relation(fields: [doctorId], references: [id])
-  patient       Patient?  @relation(fields: [patientId], references: [id])
-  messages      Message[]
-
-  @@index([doctorId])
-  @@index([patientId])
-}
-
-model Message {
-  id             String       @id @default(cuid())
-  conversationId String
-  role           String       // "user" | "assistant"
-  content        String       @db.Text
-  metadata       Json?        // For storing form data, parsed intents, etc.
-  createdAt      DateTime     @default(now())
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-
-  @@index([conversationId])
-}
-
-model Form {
-  id          String           @id @default(cuid())
-  title       String
-  name        String
-  description String?
-  createdBy   String
-  isPublic    Boolean         @default(false)
-  category    String?
-  fields      Json[]
-  settings    Json
-  style       Json
-  stats       Json
-  blocks      FormBlock[]
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  submissions FormSubmission[]
-  user        User            @relation(fields: [createdBy], references: [id])
-
-  @@index([createdBy])
-}
-
-model FormBlock {
-  id      String @id @default(cuid())
-  formId  String
-  type    String
-  content Json
-  order   Int    @default(0)
-  form    Form   @relation(fields: [formId], references: [id], onDelete: Cascade)
-
-  @@index([formId])
-}
-
-model FormSubmission {
-  id         String   @id @default(cuid())
-  formId     String
-  form       Form     @relation(fields: [formId], references: [id])
-  data       Json
-  metadata   Json
-  createdAt  DateTime @default(now())
-
-  @@index([formId])
 }

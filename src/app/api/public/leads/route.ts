@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
     // Buscar o pipeline para verificar se existe e obter o userId
     const pipelines = await prisma.$queryRaw<Pipeline[]>`
-      SELECT "userId" FROM "Pipeline" WHERE id = ${pipelineId};
+      SELECT "user_id" FROM "Pipeline" WHERE id = ${pipelineId};
     `;
 
     if (!pipelines || pipelines.length === 0) {
@@ -45,13 +45,13 @@ export async function POST(request: Request) {
 
     // Criar o lead usando SQL direto
     const leads = await prisma.$queryRaw<Lead[]>`
-      INSERT INTO "Lead" (
+      INSERT INTO "leads" (
         "id",
         "name",
         "email",
         "phone",
         "pipelineId",
-        "userId",
+        "user_id",
         "status",
         "createdAt",
         "updatedAt"

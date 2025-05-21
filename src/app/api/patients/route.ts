@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { nanoid } from 'nanoid';
 
 export async function GET() {
   try {
@@ -29,13 +30,8 @@ export async function GET() {
         email: true,
         phone: true,
         createdAt: true,
-        lead: {
-          select: {
-            status: true,
-            appointmentDate: true,
-            medicalNotes: true
-          }
-        }
+        hasPortalAccess: true,
+        hasActiveProducts: true
       },
       orderBy: {
         createdAt: 'desc',
@@ -70,7 +66,7 @@ export async function POST(req: Request) {
 
     const data = await req.json();
     console.log("Dados recebidos:", data);
-    const { name, email, phone, lead, hasPortalAccess } = data;
+    const { name, email, phone, hasPortalAccess } = data;
 
     // Validar campos obrigatórios
     if (!name || !email || !phone) {
@@ -103,33 +99,17 @@ export async function POST(req: Request) {
       );
     }
 
-    // Primeiro criamos o lead
-    console.log("Criando lead...");
-    const newLead = await db.lead.create({
-      data: {
-        name,
-        phone,
-        status: lead?.status || 'Novo',
-        appointmentDate: lead?.appointmentDate ? new Date(lead.appointmentDate) : null,
-        medicalNotes: lead?.medicalNotes || null,
-        userId: session.user.id,
-      }
-    });
-    console.log("Lead criado:", newLead.id);
-
-    // Depois criamos o paciente conectando ao lead
+    // Criar o paciente
     console.log("Criando paciente...");
     const patient = await db.patient.create({
       data: {
+        id: nanoid(), // Adicionar importação do nanoid se necessário
         name,
         email,
         phone,
         userId: session.user.id,
-        leadId: newLead.id,
-        hasPortalAccess: hasPortalAccess || false
-      },
-      include: {
-        lead: true,
+        hasPortalAccess: hasPortalAccess || false,
+        updatedAt: new Date()
       }
     });
     console.log("Paciente criado:", patient.id);

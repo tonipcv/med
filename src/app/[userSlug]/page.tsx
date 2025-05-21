@@ -14,6 +14,7 @@ import { CheckCircleIcon as CheckCircleSolid } from '@heroicons/react/24/solid';
 // Importar os templates disponíveis
 import DefaultTemplate from '@/components/templates/default';
 import DarkTemplate from '@/components/templates/dark';
+import NavyTemplate from '@/components/pages/templates/NavyTemplate';
 
 interface Doctor {
   name: string;
@@ -69,6 +70,24 @@ export default function DoctorPage() {
   switch (template) {
     case 'dark':
       return <DarkTemplate doctor={doctor} slug={params.userSlug as string} />;
+    case 'navy':
+      if (!doctor) return null;
+      return <NavyTemplate page={{
+        id: doctor.name,
+        title: doctor.name,
+        subtitle: null,
+        avatarUrl: doctor.image || null,
+        primaryColor: '#60A5FA',
+        blocks: [],
+        socialLinks: [],
+        user: {
+          id: params.userSlug,
+          name: doctor.name,
+          image: doctor.image || null,
+          specialty: doctor.specialty || null,
+          phone: null
+        }
+      }} />;
     case 'default':
     default:
       return <DefaultTemplate doctor={doctor} slug={params.userSlug as string} />;

@@ -61,10 +61,10 @@ export async function POST(
     }
 
     // Verificar se o lead existe e pertence ao usuário
-    const leadExists = await prisma.lead.findUnique({
+    const leadExists = await prisma.leads.findUnique({
       where: {
         id,
-        userId: session.user.id
+        user_id: session.user.id
       }
     });
 
@@ -76,7 +76,7 @@ export async function POST(
     }
 
     // Atualizar anotações médicas do lead
-    const updatedLead = await prisma.lead.update({
+    const updatedLead = await prisma.leads.update({
       where: {
         id
       },
@@ -141,10 +141,10 @@ export async function GET(
     }
 
     // Buscar lead com foco apenas nas anotações médicas
-    const lead = await prisma.lead.findUnique({
+    const lead = await prisma.leads.findUnique({
       where: {
         id,
-        userId: session.user.id
+        user_id: session.user.id
       },
       select: {
         id: true,

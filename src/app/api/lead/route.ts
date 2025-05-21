@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { Indication } from '@prisma/client';
+import { nanoid } from 'nanoid';
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,8 +10,7 @@ export async function POST(req: NextRequest) {
       name, 
       phone, 
       userSlug, 
-      indicationSlug, 
-      interest,
+      indicationSlug,
       source,
       utmSource,
       utmMedium,
@@ -18,7 +19,6 @@ export async function POST(req: NextRequest) {
       utmContent
     } = body;
 
-    // Validação dos campos obrigatórios
     if (!name || !phone || !userSlug) {
       return NextResponse.json(
         { error: 'Campos obrigatórios: name, phone, userSlug' },
@@ -26,7 +26,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Buscar o usuário pelo slug
     const user = await prisma.user.findUnique({
       where: { slug: userSlug }
     });
@@ -38,8 +37,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Buscar a indicação (se existir)
-    let indication: { id: string; name: string | null; slug: string; createdAt: Date; userId: string; } | null = null;
+    let indication: Indication | null = null;
     if (indicationSlug) {
       indication = await prisma.indication.findFirst({
         where: {
@@ -49,33 +47,32 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Obter IP e User-Agent
     const ip = req.headers.get('x-forwarded-for') || 'unknown';
     const userAgent = req.headers.get('user-agent') || 'unknown';
 
-    // Criar o lead
-    const lead = await prisma.lead.create({
+    const lead = await prisma.leads.create({
       data: {
+        id: nanoid(),
         name,
         phone,
-        interest,
-        userId: user.id,
-        indicationId: indication?.id,
+        user_id: user.id,
+        indicationId: indication?.id || null,
         source,
         utmSource,
         utmMedium,
         utmCampaign,
         utmTerm,
-        utmContent
+        utmContent,
+        status: 'Novo'
       }
     });
 
-    // Registrar o evento de lead
     await prisma.event.create({
       data: {
+        id: nanoid(),
         type: 'lead',
         userId: user.id,
-        indicationId: indication?.id,
+        indicationId: indication?.id || null,
         ip: ip.toString(),
         userAgent,
       }

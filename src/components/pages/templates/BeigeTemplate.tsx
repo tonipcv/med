@@ -26,23 +26,7 @@ const PLATFORM_ICONS = {
   TIKTOK: MessageCircle,
 } as const;
 
-const VerifiedBadge = () => (
-  <svg
-    width="22"
-    height="22"
-    viewBox="0 0 18 18"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <circle cx="9" cy="9" r="9" fill="#0095F6"/>
-    <path
-      d="M13.093 6.436a.75.75 0 0 0-1.036-.248l-3.144 2.115-1.17-1.635a.75.75 0 0 0-1.222.873l1.75 2.444a.75.75 0 0 0 1.129.076l3.75-3.125a.75.75 0 0 0-.057-1.5z"
-      fill="#fff"
-    />
-  </svg>
-);
-
-export default function LightTemplate({ page }: TemplateProps) {
+export default function BeigeTemplate({ page }: TemplateProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeFormBlock, setActiveFormBlock] = useState<typeof page.blocks[0] | null>(null);
   const [activeMultiStepBlock, setActiveMultiStepBlock] = useState<typeof page.blocks[0] | null>(null);
@@ -75,10 +59,10 @@ export default function LightTemplate({ page }: TemplateProps) {
   };
 
   return (
-    <div className="relative min-h-screen bg-white text-gray-900 font-[system-ui,-apple-system,BlinkMacSystemFont,Segoe_UI,Roboto,Oxygen,Ubuntu,Cantarell,Open_Sans,Helvetica_Neue,sans-serif] flex flex-col">
+    <div className="relative min-h-screen bg-[#F5E6D3] text-[#4A3F35] font-[system-ui,-apple-system,BlinkMacSystemFont,Segoe_UI,Roboto,Oxygen,Ubuntu,Cantarell,Open_Sans,Helvetica_Neue,sans-serif] flex flex-col">
       {/* Subtle gradient border */}
       <div className="md:hidden fixed inset-0 p-[1px] pointer-events-none">
-        <div className="w-full h-full rounded-none bg-gradient-to-b from-gray-200 via-gray-100 to-gray-200" />
+        <div className="w-full h-full rounded-none bg-gradient-to-b from-[#E8D5BE] via-[#F5E6D3] to-[#DEC8B5]" />
       </div>
       
       <div className="relative flex-1 py-16 px-4 sm:px-6">
@@ -90,27 +74,34 @@ export default function LightTemplate({ page }: TemplateProps) {
         <div className="max-w-lg mx-auto w-full space-y-8">
           {/* Header */}
           <div className="text-center space-y-4">
-            <div className="relative w-32 h-32 sm:w-24 sm:h-24 mx-auto mb-6">
-              <div className="absolute inset-0 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full opacity-50" />
+            <div className="relative w-32 h-32 sm:w-28 sm:h-28 mx-auto mb-6">
+              <div 
+                className="absolute inset-0 rounded-full animate-pulse"
+                style={{ 
+                  background: 'linear-gradient(135deg, #E8D5BE40 0%, #B89F8840 100%)',
+                  filter: 'blur(20px)',
+                  transform: 'scale(1.1)',
+                }}
+              />
               <img
                 src={page.avatarUrl || page.user.image || '/default-avatar.png'}
                 alt={page.user.name}
-                className="relative w-full h-full object-cover rounded-full border-4 border-gray-100 shadow-lg"
+                className="relative w-full h-full object-cover rounded-full border-2 border-[#B89F88]/30 shadow-2xl"
               />
             </div>
             <h1 className="text-2xl sm:text-3xl font-medium tracking-tight flex items-center justify-center gap-2">
-              <span className="bg-gradient-to-r from-gray-900 via-gray-700 to-gray-800 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#8B7355] via-[#6F5B3E] to-[#4A3F35] bg-clip-text text-transparent">
                 {page.user.name}
               </span>
               <div className="rounded-full">
-                <BsPatchCheckFill size={20} className="text-blue-500" />
+                <BsPatchCheckFill size={20} className="text-[#8B7355]" />
               </div>
             </h1>
             {page.user.specialty && (
-              <p className="text-base sm:text-lg text-gray-600 font-light tracking-wide">{page.user.specialty}</p>
+              <p className="text-base sm:text-lg text-[#6F5B3E]/80 font-light tracking-wide">{page.user.specialty}</p>
             )}
             {page.subtitle && (
-              <p className="text-sm sm:text-base text-gray-500 font-light tracking-wide">{page.subtitle}</p>
+              <p className="text-sm sm:text-base text-[#8B7355]/60 font-light tracking-wide">{page.subtitle}</p>
             )}
           </div>
 
@@ -121,14 +112,14 @@ export default function LightTemplate({ page }: TemplateProps) {
                 return (
                   <Button
                     key={block.id}
-                    className="w-full py-5 sm:py-6 text-base sm:text-lg font-light tracking-wide shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-2xl bg-white hover:bg-gray-50 border border-gray-200 relative overflow-hidden before:absolute before:inset-0 before:border before:border-gray-100 before:rounded-2xl before:scale-[1.01] text-gray-800"
+                    className="w-full py-5 sm:py-6 text-base sm:text-lg font-light tracking-wide shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-2xl bg-gradient-to-r from-[#D4BC9E] to-[#B89F88] hover:from-[#B89F88] hover:to-[#A08D77] border border-[#B89F88]/30 relative overflow-hidden before:absolute before:inset-0 before:border before:border-[#8B7355]/20 before:rounded-2xl before:scale-[1.01]"
                     asChild
                   >
                     <a
                       href={block.content.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-3 text-gray-800"
+                      className="flex items-center justify-center gap-3 text-[#4A3F35]"
                     >
                       {block.content.label}
                     </a>
@@ -140,7 +131,7 @@ export default function LightTemplate({ page }: TemplateProps) {
                 return (
                   <Button
                     key={block.id}
-                    className="w-full py-5 sm:py-6 text-base sm:text-lg font-light tracking-wide shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-2xl bg-white hover:bg-gray-50 border border-gray-200 relative overflow-hidden before:absolute before:inset-0 before:border before:border-gray-100 before:rounded-2xl before:scale-[1.01] text-gray-800"
+                    className="w-full py-5 sm:py-6 text-base sm:text-lg font-light tracking-wide shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-2xl bg-gradient-to-r from-[#D4BC9E] to-[#B89F88] hover:from-[#B89F88] hover:to-[#A08D77] border border-[#B89F88]/30 relative overflow-hidden before:absolute before:inset-0 before:border before:border-[#8B7355]/20 before:rounded-2xl before:scale-[1.01] text-[#4A3F35]"
                     onClick={() => setActiveMultiStepBlock(block)}
                   >
                     {block.content.label}
@@ -153,7 +144,7 @@ export default function LightTemplate({ page }: TemplateProps) {
                   return (
                     <Button
                       key={block.id}
-                      className="w-full py-5 sm:py-6 text-base sm:text-lg font-light tracking-wide shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-2xl bg-white hover:bg-gray-50 border border-gray-200 relative overflow-hidden before:absolute before:inset-0 before:border before:border-gray-100 before:rounded-2xl before:scale-[1.01] text-gray-800"
+                      className="w-full py-5 sm:py-6 text-base sm:text-lg font-light tracking-wide shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-2xl bg-gradient-to-r from-[#D4BC9E] to-[#B89F88] hover:from-[#B89F88] hover:to-[#A08D77] border border-[#B89F88]/30 relative overflow-hidden before:absolute before:inset-0 before:border before:border-[#8B7355]/20 before:rounded-2xl before:scale-[1.01] text-[#4A3F35]"
                       onClick={() => {
                         setActiveFormBlock(block);
                         setIsModalOpen(true);
@@ -167,9 +158,9 @@ export default function LightTemplate({ page }: TemplateProps) {
                 return (
                   <div
                     key={block.id}
-                    className="bg-white rounded-2xl shadow-md p-8 transform transition-all duration-300 hover:shadow-lg border border-gray-200"
+                    className="bg-[#E8D5BE] rounded-2xl shadow-xl p-8 transform transition-all duration-300 hover:shadow-2xl border border-[#B89F88]/30"
                   >
-                    <h2 className="text-2xl font-extralight mb-6 text-gray-900 tracking-wide">
+                    <h2 className="text-2xl font-light mb-6 text-[#4A3F35] tracking-wide">
                       {block.content.title}
                     </h2>
                     <form onSubmit={(e) => {
@@ -184,39 +175,39 @@ export default function LightTemplate({ page }: TemplateProps) {
                       });
                     }} className="space-y-6">
                       <div>
-                        <Label htmlFor="name" className="text-sm text-gray-600 font-light">Nome</Label>
+                        <Label htmlFor="name" className="text-sm text-[#6F5B3E]/80 font-light">Nome</Label>
                         <Input 
                           id="name" 
                           name="name"
                           placeholder="Seu nome completo"
-                          className="mt-2 bg-gray-50 border-gray-200 focus:border-gray-300 font-light"
+                          className="mt-2 bg-[#F5E6D3] border-[#B89F88]/30 focus:border-[#8B7355] font-light text-[#4A3F35] placeholder:text-[#8B7355]/30"
                           required
                         />
                       </div>
                       <div>
-                        <Label htmlFor="email" className="text-sm text-gray-600 font-light">Email</Label>
+                        <Label htmlFor="email" className="text-sm text-[#6F5B3E]/80 font-light">Email</Label>
                         <Input 
                           id="email" 
                           name="email"
                           type="email"
                           placeholder="seu@email.com"
-                          className="mt-2 bg-gray-50 border-gray-200 focus:border-gray-300 font-light"
+                          className="mt-2 bg-[#F5E6D3] border-[#B89F88]/30 focus:border-[#8B7355] font-light text-[#4A3F35] placeholder:text-[#8B7355]/30"
                           required
                         />
                       </div>
                       <div>
-                        <Label htmlFor="phone" className="text-sm text-gray-600 font-light">WhatsApp</Label>
+                        <Label htmlFor="phone" className="text-sm text-[#6F5B3E]/80 font-light">WhatsApp</Label>
                         <Input 
                           id="phone" 
                           name="phone"
                           placeholder="(00) 00000-0000"
-                          className="mt-2 bg-gray-50 border-gray-200 focus:border-gray-300 font-light"
+                          className="mt-2 bg-[#F5E6D3] border-[#B89F88]/30 focus:border-[#8B7355] font-light text-[#4A3F35] placeholder:text-[#8B7355]/30"
                           required
                         />
                       </div>
                       <Button 
                         type="submit"
-                        className="w-full py-6 text-lg font-light tracking-wide shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-xl bg-gray-900 text-white hover:bg-gray-800"
+                        className="w-full py-6 text-lg font-light tracking-wide shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-xl bg-gradient-to-r from-[#B89F88] to-[#A08D77] hover:from-[#A08D77] hover:to-[#8B7355] text-[#F5E6D3]"
                       >
                         Enviar
                       </Button>
@@ -236,18 +227,18 @@ export default function LightTemplate({ page }: TemplateProps) {
                 return (
                   <div
                     key={block.id}
-                    className="bg-white rounded-2xl shadow-md transform transition-all duration-300 hover:shadow-lg border border-gray-200 overflow-hidden"
+                    className="bg-[#E8D5BE] rounded-2xl shadow-xl transform transition-all duration-300 hover:shadow-2xl border border-[#B89F88]/30 overflow-hidden"
                   >
                     <div className="p-4">
-                      <h2 className="text-base sm:text-lg font-extralight mb-2 text-gray-900 tracking-wide flex items-center gap-2">
-                        <MapPin size={16} className="text-gray-600" />
+                      <h2 className="text-base sm:text-lg font-light mb-2 text-[#4A3F35] tracking-wide flex items-center gap-2">
+                        <MapPin size={16} className="text-[#8B7355]" />
                         {block.content.city || 'Location'}
                       </h2>
                     </div>
                     <div className="h-[150px] sm:h-[180px] w-full">
                       <LocationMap 
                         addresses={[addressObject]} 
-                        primaryColor="#111111"
+                        primaryColor="#8B7355"
                       />
                     </div>
                   </div>
@@ -268,9 +259,23 @@ export default function LightTemplate({ page }: TemplateProps) {
               }
 
               if (block.type === 'WHATSAPP') {
-                return block.content.whatsappNumber ? (
-                  <WhatsAppButton key={block.id} phoneNumber={block.content.whatsappNumber} fixed={false} />
-                ) : null;
+                return (
+                  <Button
+                    key={block.id}
+                    className="w-full py-5 sm:py-6 text-base sm:text-lg font-light tracking-wide shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-2xl bg-gradient-to-r from-[#D4BC9E] to-[#B89F88] hover:from-[#B89F88] hover:to-[#A08D77] border border-[#B89F88]/30 relative overflow-hidden before:absolute before:inset-0 before:border before:border-[#8B7355]/20 before:rounded-2xl before:scale-[1.01] text-[#4A3F35]"
+                    asChild
+                  >
+                    <a
+                      href={`https://wa.me/${block.content.whatsappNumber}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2"
+                    >
+                      <MessageCircle className="w-5 h-5" />
+                      {block.content.buttonTitle || 'Enviar Mensagem'}
+                    </a>
+                  </Button>
+                );
               }
 
               if (block.type === 'REDIRECT') {
@@ -285,37 +290,28 @@ export default function LightTemplate({ page }: TemplateProps) {
 
           {/* Social Links */}
           {page.socialLinks.length > 0 && (
-            <div className="flex justify-center gap-6 mt-10">
+            <div className="flex justify-center gap-4 sm:gap-6 pt-4 sm:pt-6">
               {page.socialLinks.map((link) => {
-                const Icon = PLATFORM_ICONS[link.platform] || MessageCircle;
+                const Icon = PLATFORM_ICONS[link.platform];
                 return (
                   <a
-                    key={link.id}
+                    key={link.platform}
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="transform transition-all duration-300 hover:scale-110 text-gray-500 hover:text-gray-900"
+                    className="p-2 sm:p-3 rounded-full bg-gradient-to-r from-[#D4BC9E] to-[#B89F88] hover:from-[#B89F88] hover:to-[#A08D77] border border-[#B89F88]/30 transition-all duration-300 hover:scale-110 hover:-translate-y-1 text-[#4A3F35] hover:text-[#2A231E] shadow-xl hover:shadow-2xl"
                   >
-                    <Icon className="h-7 w-7" />
+                    <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                   </a>
                 );
               })}
             </div>
           )}
-        </div>
-      </div>
 
-      {/* Footer */}
-      <div className="relative w-full mt-20 pb-6">
-        <div className="text-center text-sm text-gray-500 font-light tracking-wide">
-          <a 
-            href="https://med1.app/auth/register" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="opacity-75 hover:opacity-100 transition-opacity"
-          >
-            Created with Med1
-          </a>
+          {/* Footer */}
+          <div className="text-center text-xs sm:text-sm text-[#8B7355]/60 pt-4 sm:pt-6">
+            <p className="opacity-75">Created with Med1</p>
+          </div>
         </div>
       </div>
 
@@ -328,7 +324,7 @@ export default function LightTemplate({ page }: TemplateProps) {
             setActiveFormBlock(null);
           }}
           title={activeFormBlock.content.modalTitle || activeFormBlock.content.title || ''}
-          primaryColor="#111111"
+          primaryColor="#8B7355"
           pipelineId={activeFormBlock.content.pipelineId}
           successPage={activeFormBlock.content.successPage}
           formId={activeFormBlock.content.formId}

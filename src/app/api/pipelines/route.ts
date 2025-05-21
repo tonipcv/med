@@ -10,14 +10,15 @@ export async function GET() {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
-    const pipelines = await prisma.pipeline.findMany({
+    const pipelines = await prisma.pipelines.findMany({
       where: {
-        userId: session.user.id
+        user_id: session.user.id
       },
       select: {
         id: true,
         name: true,
-        description: true
+        description: true,
+        columns: true
       }
     });
 
@@ -48,11 +49,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const pipeline = await prisma.pipeline.create({
+    const pipeline = await prisma.pipelines.create({
       data: {
         name,
         description: description || '',
-        userId: session.user.id
+        user_id: session.user.id
       }
     });
 
@@ -84,12 +85,12 @@ export async function DELETE(request: Request) {
     }
 
     // Verifica se o pipeline pertence ao usuário
-    const pipeline = await prisma.pipeline.findUnique({
+    const pipeline = await prisma.pipelines.findUnique({
       where: { id: pipelineId },
-      select: { userId: true }
+      select: { user_id: true }
     });
 
-    if (!pipeline || pipeline.userId !== session.user.id) {
+    if (!pipeline || pipeline.user_id !== session.user.id) {
       return NextResponse.json(
         { error: 'Pipeline não encontrado' },
         { status: 404 }
@@ -98,11 +99,11 @@ export async function DELETE(request: Request) {
 
     // Remove o pipeline e atualiza os leads associados
     await prisma.$transaction([
-      prisma.lead.updateMany({
+      prisma.leads.updateMany({
         where: { pipelineId },
         data: { pipelineId: null }
       }),
-      prisma.pipeline.delete({
+      prisma.pipelines.delete({
         where: { id: pipelineId }
       })
     ]);

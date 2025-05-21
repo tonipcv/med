@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
 
     // Construir filtros
     const filters: any = {
-      userId: validation.user.id
+      user_id: validation.user.id
     };
 
     if (status) {
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Buscar leads do médico
-    const leads = await prisma.lead.findMany({
+    const leads = await prisma.leads.findMany({
       where: filters,
       orderBy: {
         createdAt: 'desc'
@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Contar o total para paginação
-    const total = await prisma.lead.count({
+    const total = await prisma.leads.count({
       where: filters
     });
 
@@ -106,10 +106,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Check for existing lead with same phone number for this user
-    const existingLead = await prisma.lead.findFirst({
+    const existingLead = await prisma.leads.findFirst({
       where: {
         phone,
-        userId: token.sub
+        user_id: token.sub
       }
     });
 
@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
 
     if (existingLead) {
       // Update existing lead
-      lead = await prisma.lead.update({
+      lead = await prisma.leads.update({
         where: { id: existingLead.id },
         data: {
           name,
@@ -136,17 +136,18 @@ export async function POST(req: NextRequest) {
           utmMedium: utmMedium || existingLead.utmMedium,
           utmCampaign: utmCampaign || existingLead.utmCampaign,
           utmTerm: utmTerm || existingLead.utmTerm,
-          utmContent: utmContent || existingLead.utmContent
+          utmContent: utmContent || existingLead.utmContent,
+          updatedAt: new Date()
         }
       });
     } else {
       // Create new lead
-      lead = await prisma.lead.create({
+      lead = await prisma.leads.create({
         data: {
           name,
           phone,
           interest: interest || null,
-          userId: token.sub,
+          user_id: token.sub,
           indicationId: indicationId || null,
           status: status || "Novo",
           potentialValue: potentialValue ? parseFloat(potentialValue) : null,

@@ -14,9 +14,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { leads } = await req.json();
+    const { leads: leadsData } = await req.json();
 
-    if (!Array.isArray(leads)) {
+    if (!Array.isArray(leadsData)) {
       return NextResponse.json(
         { error: 'Formato inválido' },
         { status: 400 }
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate and process each lead
-    const validLeads = leads.filter(lead => {
+    const validLeads = leadsData.filter(lead => {
       return (
         typeof lead.name === 'string' &&
         lead.name.trim() &&
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       );
     }).map(lead => ({
       ...lead,
-      userId: session.user.id,
+      user_id: session.user.id,
       status: lead.status || 'Novo',
       createdAt: new Date(),
       updatedAt: new Date()
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     for (let i = 0; i < validLeads.length; i += batchSize) {
       const batch = validLeads.slice(i, i + batchSize);
-      const result = await prisma.lead.createMany({
+      const result = await prisma.leads.createMany({
         data: batch,
         skipDuplicates: true, // Skip if phone number already exists
       });

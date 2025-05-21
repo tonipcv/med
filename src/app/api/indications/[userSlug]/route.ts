@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getToken } from "next-auth/jwt";
+import { nanoid } from 'nanoid';
 
 /**
  * @swagger
@@ -85,7 +86,7 @@ export async function GET(
     });
 
     // Buscar leads gerados por esta indicação
-    const leads = await prisma.lead.findMany({
+    const leads = await prisma.leads.findMany({
       where: {
         indicationId: indication.id
       },
@@ -254,7 +255,7 @@ export async function DELETE(
     });
 
     // Excluir leads relacionados
-    await prisma.lead.deleteMany({
+    await prisma.leads.deleteMany({
       where: { indicationId: indication.id }
     });
 
@@ -295,6 +296,7 @@ export async function POST(
 
   await prisma.event.create({
     data: {
+      id: nanoid(),
       type: "INDICATION_SHARED",
       userId: token.sub as string,
       indicationId: indication.id,

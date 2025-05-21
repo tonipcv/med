@@ -78,6 +78,14 @@ interface Lead {
     name?: string;
     slug: string;
   };
+  pipelineId?: string;
+}
+
+interface Pipeline {
+  id: string;
+  name: string;
+  description?: string;
+  columns?: any;
 }
 
 interface DashboardData {
@@ -107,6 +115,37 @@ const formatPhoneNumber = (phone: string) => {
   return `+55 ${cleanNumbers}`;
 };
 
+const SelectField = ({ 
+  id, 
+  label, 
+  value, 
+  onChange, 
+  options 
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+}) => (
+  <div className="space-y-2">
+    <Label htmlFor={id} className="text-sm text-gray-700">{label}</Label>
+    <select
+      id={id}
+      name={id}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full bg-white/50 border border-gray-200 text-gray-900 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-300"
+    >
+      {options.map(option => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  </div>
+);
+
 export default function LeadsPage() {
   const { data: session } = useSession();
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -128,19 +167,21 @@ export default function LeadsPage() {
     medicalNotes: "",
     interest: "",
     potentialValue: "",
-    source: ""
+    source: "",
+    pipelineId: ""
   });
   const [createFormData, setCreateFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    status: "novo",
+    status: "Novo",
     appointmentDate: "",
     appointmentTime: "",
     medicalNotes: "",
     interest: "",
     potentialValue: "",
-    source: ""
+    source: "website",
+    pipelineId: ""
   });
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [isCreateStatusOpen, setIsCreateStatusOpen] = useState(false);
@@ -150,11 +191,30 @@ export default function LeadsPage() {
   const [totalLeads, setTotalLeads] = useState(0);
   const [displayedLeads, setDisplayedLeads] = useState<Lead[]>([]);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [pipelines, setPipelines] = useState<Pipeline[]>([]);
+
+  const statusOptions = [
+    { value: "Novo", label: "Novo" },
+    { value: "Agendado", label: "Agendado" },
+    { value: "Compareceu", label: "Compareceu" },
+    { value: "Não veio", label: "Não veio" },
+    { value: "Cancelado", label: "Cancelado" },
+    { value: "Fechado", label: "Paciente" }
+  ];
+
+  const sourceOptions = [
+    { value: "", label: "Selecione a origem" },
+    { value: "website", label: "Website" },
+    { value: "social", label: "Redes Sociais" },
+    { value: "referral", label: "Indicação" },
+    { value: "other", label: "Outro" }
+  ];
 
   useEffect(() => {
     if (session?.user?.id) {
       fetchLeads();
       fetchDashboardData();
+      fetchPipelines();
     }
   }, [session]);
 
@@ -234,8 +294,33 @@ export default function LeadsPage() {
     }
   };
 
+  const fetchPipelines = async () => {
+    try {
+      const response = await fetch('/api/pipelines');
+      if (response.ok) {
+        const data = await response.json();
+        setPipelines(data);
+      }
+    } catch (error) {
+      console.error('Error fetching pipelines:', error);
+    }
+  };
+
   const openEditModal = (lead: Lead) => {
     setEditingLead(lead);
+    setEditFormData({
+      name: lead.name || "",
+      email: lead.email || "",
+      phone: lead.phone || "",
+      status: lead.status || "",
+      appointmentDate: lead.appointmentDate ? new Date(lead.appointmentDate).toISOString().split('T')[0] : "",
+      appointmentTime: lead.appointmentDate ? new Date(lead.appointmentDate).toISOString().split('T')[1].substring(0, 5) : "",
+      medicalNotes: lead.medicalNotes || "",
+      interest: lead.interest || "",
+      potentialValue: lead.potentialValue?.toString() || "",
+      source: lead.source || "",
+      pipelineId: lead.pipelineId || ""
+    });
     setIsEditModalOpen(true);
   };
 
@@ -276,29 +361,52 @@ export default function LeadsPage() {
     if (!editingLead) return;
 
     try {
-      const response = await fetch(`/api/leads?leadId=${editingLead.id}`, {
-        method: 'PUT',
+      // Combine appointment date and time if both are provided
+      let appointmentDateTime: string | null = null;
+      if (editFormData.appointmentDate && editFormData.appointmentTime) {
+        appointmentDateTime = `${editFormData.appointmentDate}T${editFormData.appointmentTime}`;
+      }
+
+      // Prepare the data for the API - only include fields that exist in the Prisma model
+      const updateData = {
+        name: editFormData.name,
+        email: editFormData.email,
+        phone: editFormData.phone,
+        status: editFormData.status,
+        appointmentDate: appointmentDateTime,
+        medicalNotes: editFormData.medicalNotes,
+        potentialValue: editFormData.potentialValue ? parseFloat(editFormData.potentialValue) : null,
+        source: editFormData.source,
+        pipelineId: editFormData.pipelineId || null,
+        updatedAt: new Date()
+      };
+
+      const response = await fetch(`/api/leads/${editingLead.id}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editFormData)
+        body: JSON.stringify(updateData)
       });
 
-      if (response.ok) {
-        toast({
-          title: "Lead atualizado",
-          description: "O lead foi atualizado com sucesso",
-        });
-        await fetchLeads();
-        await fetchDashboardData();
-        setIsEditModalOpen(false);
-      } else {
+      if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Erro ao atualizar lead');
       }
+
+      const result = await response.json();
+
+      toast({
+        title: "Lead atualizado",
+        description: "O lead foi atualizado com sucesso",
+      });
+
+      await fetchLeads();
+      await fetchDashboardData();
+      setIsEditModalOpen(false);
     } catch (error) {
       console.error('Erro ao atualizar lead:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar o lead",
+        description: error instanceof Error ? error.message : "Não foi possível atualizar o lead",
         variant: "destructive"
       });
     }
@@ -434,6 +542,26 @@ export default function LeadsPage() {
 
   const handleCreateLead = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validação dos campos obrigatórios
+    if (!createFormData.name.trim()) {
+      toast({
+        title: "Erro",
+        description: "O nome é obrigatório",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!createFormData.phone.trim()) {
+      toast({
+        title: "Erro",
+        description: "O telefone é obrigatório",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       const response = await fetch('/api/leads', {
         method: 'POST',
@@ -453,13 +581,14 @@ export default function LeadsPage() {
           name: "",
           email: "",
           phone: "",
-          status: "novo",
+          status: "Novo",
           appointmentDate: "",
           appointmentTime: "",
           medicalNotes: "",
           interest: "",
           potentialValue: "",
-          source: ""
+          source: "website",
+          pipelineId: ""
         });
       } else {
         const error = await response.json();
@@ -796,7 +925,9 @@ export default function LeadsPage() {
                 <h3 className="text-sm font-medium text-gray-500 mb-3">Informações Básicas</h3>
                 <div className="grid gap-4 bg-gray-50/50 p-4 rounded-lg">
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-sm text-gray-700">Nome</Label>
+                    <Label htmlFor="name" className="text-sm text-gray-700">
+                      Nome <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="name"
                       name="name"
@@ -804,6 +935,7 @@ export default function LeadsPage() {
                       onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
                       placeholder="Nome completo"
                       className="bg-white/50 border-gray-200 focus:border-gray-300 text-gray-900"
+                      required
                     />
                   </div>
 
@@ -821,7 +953,9 @@ export default function LeadsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-sm text-gray-700">Telefone</Label>
+                    <Label htmlFor="phone" className="text-sm text-gray-700">
+                      Telefone <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="phone"
                       name="phone"
@@ -829,6 +963,7 @@ export default function LeadsPage() {
                       onChange={(e) => setCreateFormData({ ...createFormData, phone: formatPhoneNumber(e.target.value) })}
                       placeholder="Telefone do lead"
                       className="bg-white/50 border-gray-200 focus:border-gray-300 text-gray-900"
+                      required
                     />
                   </div>
                 </div>
@@ -838,23 +973,20 @@ export default function LeadsPage() {
               <div>
                 <h3 className="text-sm font-medium text-gray-500 mb-3">Status e Origem</h3>
                 <div className="grid gap-4 bg-gray-50/50 p-4 rounded-lg">
-                  <div className="space-y-2">
-                    <Label htmlFor="source" className="text-sm text-gray-700">Origem</Label>
-                    <UISelect
-                      value={createFormData.source}
-                      onValueChange={(value) => setCreateFormData({ ...createFormData, source: value })}
-                    >
-                      <UISelectTrigger className="bg-white/50 border-gray-200 focus:border-gray-300 text-gray-900">
-                        <UISelectValue placeholder="Selecione a origem" />
-                      </UISelectTrigger>
-                      <UISelectContent>
-                        <UISelectItem value="website">Website</UISelectItem>
-                        <UISelectItem value="social">Redes Sociais</UISelectItem>
-                        <UISelectItem value="referral">Indicação</UISelectItem>
-                        <UISelectItem value="other">Outro</UISelectItem>
-                      </UISelectContent>
-                    </UISelect>
-                  </div>
+                  <SelectField
+                    id="status"
+                    label="Status"
+                    value={createFormData.status}
+                    onChange={(value) => setCreateFormData({ ...createFormData, status: value })}
+                    options={statusOptions}
+                  />
+                  <SelectField
+                    id="source"
+                    label="Origem"
+                    value={createFormData.source}
+                    onChange={(value) => setCreateFormData({ ...createFormData, source: value })}
+                    options={sourceOptions}
+                  />
                 </div>
               </div>
 
@@ -937,49 +1069,38 @@ export default function LeadsPage() {
                 <h3 className="text-sm font-medium text-gray-500 mb-3">Status e Origem</h3>
                 <div className="grid gap-4 bg-gray-50/50 p-4 rounded-lg">
                   <div className="space-y-2">
-                    <Label htmlFor="status" className="text-sm text-gray-700">Status</Label>
-                    <UISelect
+                    <Label htmlFor="editStatus" className="text-sm text-gray-700">Status</Label>
+                    <select
+                      id="editStatus"
                       name="status"
                       value={editFormData.status}
-                      onValueChange={(value) => handleSelectChange('status', value)}
+                      onChange={(e) => handleSelectChange('status', e.target.value)}
+                      className="w-full bg-white/50 border border-gray-200 text-gray-900 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-300"
                     >
-                      <UISelectTrigger id="status" className="bg-white/50 border-gray-200 focus:border-gray-300 text-gray-900">
-                        <UISelectValue placeholder="Selecione o status" />
-                      </UISelectTrigger>
-                      <UISelectContent>
-                        <UISelectGroup>
-                          <UISelectLabel>Lead</UISelectLabel>
-                          <UISelectItem value="Novo">Novo</UISelectItem>
-                          <UISelectItem value="Agendado">Agendado</UISelectItem>
-                          <UISelectItem value="Compareceu">Compareceu</UISelectItem>
-                          <UISelectItem value="Não veio">Não veio</UISelectItem>
-                          <UISelectItem value="Cancelado">Cancelado</UISelectItem>
-                        </UISelectGroup>
-                        <UISelectSeparator />
-                        <UISelectGroup>
-                          <UISelectLabel>Converter para</UISelectLabel>
-                          <UISelectItem value="Fechado">Paciente</UISelectItem>
-                        </UISelectGroup>
-                      </UISelectContent>
-                    </UISelect>
+                      <option value="Novo">Novo</option>
+                      <option value="Agendado">Agendado</option>
+                      <option value="Compareceu">Compareceu</option>
+                      <option value="Não veio">Não veio</option>
+                      <option value="Cancelado">Cancelado</option>
+                      <option value="Fechado">Paciente</option>
+                    </select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="source" className="text-sm text-gray-700">Origem</Label>
-                    <UISelect
+                    <Label htmlFor="editSource" className="text-sm text-gray-700">Origem</Label>
+                    <select
+                      id="editSource"
+                      name="source"
                       value={editFormData.source}
-                      onValueChange={(value) => handleSelectChange('source', value)}
+                      onChange={(e) => handleSelectChange('source', e.target.value)}
+                      className="w-full bg-white/50 border border-gray-200 text-gray-900 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-300"
                     >
-                      <UISelectTrigger className="bg-white/50 border-gray-200 focus:border-gray-300 text-gray-900">
-                        <UISelectValue placeholder="Selecione a origem" />
-                      </UISelectTrigger>
-                      <UISelectContent>
-                        <UISelectItem value="website">Website</UISelectItem>
-                        <UISelectItem value="social">Redes Sociais</UISelectItem>
-                        <UISelectItem value="referral">Indicação</UISelectItem>
-                        <UISelectItem value="other">Outro</UISelectItem>
-                      </UISelectContent>
-                    </UISelect>
+                      <option value="">Selecione a origem</option>
+                      <option value="website">Website</option>
+                      <option value="social">Redes Sociais</option>
+                      <option value="referral">Indicação</option>
+                      <option value="other">Outro</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -1059,6 +1180,28 @@ export default function LeadsPage() {
                       placeholder="Observações sobre o lead"
                       className="bg-white/50 border-gray-200 focus:border-gray-300 text-gray-900 min-h-[100px]"
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Pipeline */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 mb-3">Pipeline</h3>
+                <div className="grid gap-4 bg-gray-50/50 p-4 rounded-lg">
+                  <div className="space-y-2">
+                    <Label htmlFor="pipelineId" className="text-sm text-gray-700">Pipeline</Label>
+                    <select
+                      id="pipelineId"
+                      name="pipelineId"
+                      value={editFormData.pipelineId}
+                      onChange={(e) => handleSelectChange('pipelineId', e.target.value)}
+                      className="w-full bg-white/50 border border-gray-200 text-gray-900 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                    >
+                      <option value="">Selecione uma pipeline</option>
+                      {pipelines.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>

@@ -41,10 +41,10 @@ export async function GET(
     }
 
     // Buscar lead com todas as informações relacionadas
-    const lead = await prisma.lead.findUnique({
+    const lead = await prisma.leads.findUnique({
       where: {
         id,
-        userId: session.user.id
+        user_id: session.user.id
       },
       include: {
         indication: {
@@ -129,13 +129,24 @@ export async function PATCH(
 
     // Extrair dados do corpo da requisição
     const data = await req.json();
-    const { name, email, phone, status } = data;
+    const { 
+      name, 
+      email, 
+      phone, 
+      status, 
+      appointmentDate, 
+      appointmentTime,
+      medicalNotes,
+      potentialValue,
+      source,
+      pipelineId
+    } = data;
 
     // Verificar se o lead existe e pertence ao usuário
-    const leadExists = await prisma.lead.findUnique({
+    const leadExists = await prisma.leads.findUnique({
       where: {
         id,
-        userId: session.user.id
+        user_id: session.user.id
       }
     });
 
@@ -146,17 +157,40 @@ export async function PATCH(
       );
     }
 
+    // Se um pipelineId foi fornecido, verifica se a pipeline existe e pertence ao usuário
+    if (pipelineId) {
+      const pipeline = await prisma.pipelines.findFirst({
+        where: {
+          id: pipelineId,
+          user_id: session.user.id
+        }
+      });
+
+      if (!pipeline) {
+        return NextResponse.json({ error: 'Pipeline não encontrada' }, { status: 404 });
+      }
+    }
+
+    let appointmentDateTime = null;
+    if (appointmentDate && appointmentTime) {
+      appointmentDateTime = new Date(`${appointmentDate}T${appointmentTime}`);
+    }
+
     // Preparar dados para atualização
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
     if (email !== undefined) updateData.email = email;
     if (phone !== undefined) updateData.phone = phone;
-    if (status !== undefined && ['new', 'contacted', 'converted', 'lost'].includes(status)) {
-      updateData.status = status;
-    }
+    if (status !== undefined) updateData.status = status;
+    if (potentialValue !== undefined) updateData.potentialValue = parseFloat(potentialValue);
+    if (appointmentDateTime !== undefined) updateData.appointmentDate = appointmentDateTime;
+    if (medicalNotes !== undefined) updateData.medicalNotes = medicalNotes;
+    if (source !== undefined) updateData.source = source;
+    if (pipelineId !== undefined) updateData.pipelineId = pipelineId;
+    updateData.updatedAt = new Date();
 
     // Atualizar o lead
-    const updatedLead = await prisma.lead.update({
+    const updatedLead = await prisma.leads.update({
       where: {
         id
       },
@@ -224,10 +258,10 @@ export async function DELETE(
     }
 
     // Verificar se o lead existe e pertence ao usuário
-    const leadExists = await prisma.lead.findUnique({
+    const leadExists = await prisma.leads.findUnique({
       where: {
         id,
-        userId: session.user.id
+        user_id: session.user.id
       }
     });
 
@@ -238,8 +272,8 @@ export async function DELETE(
       );
     }
 
-    // Excluir o lead
-    await prisma.lead.delete({
+    // Remover o lead
+    await prisma.leads.delete({
       where: {
         id
       }

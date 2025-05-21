@@ -129,6 +129,9 @@ export default function PipelinePage() {
         // seleciona o primeiro
         if (data.length > 0 && !currentPipelineId) {
           setCurrentPipelineId(data[0].id);
+        } else if (data.length === 0) {
+          // Se não houver pipelines, remove o loading state
+          setLoading(false);
         }
       } else {
         console.error('Erro ao buscar pipelines:', await response.text());
@@ -137,9 +140,16 @@ export default function PipelinePage() {
           description: "Não foi possível obter os pipelines",
           variant: "destructive"
         });
+        setLoading(false);
       }
     } catch (error) {
       console.error('Erro ao buscar pipelines:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao carregar os pipelines",
+        variant: "destructive"
+      });
+      setLoading(false);
     }
   };
 
@@ -167,7 +177,10 @@ export default function PipelinePage() {
   };
 
   const fetchLeads = async () => {
-    if (!currentPipelineId) return;
+    if (!currentPipelineId) {
+      setLoading(false);
+      return;
+    }
     
     try {
       setLoading(true);
@@ -198,7 +211,7 @@ export default function PipelinePage() {
       console.error('Erro ao buscar leads:', error);
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao buscar os dados",
+        description: "Ocorreu um erro ao carregar os leads",
         variant: "destructive"
       });
       setLeads([]);

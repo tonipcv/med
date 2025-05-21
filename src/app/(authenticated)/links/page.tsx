@@ -394,7 +394,7 @@ export default function LinksPage() {
                     </Button>
                   </div>
                   <p className="text-xs text-gray-500">
-                    Este será o caminho da sua página: localhost:3000/{user?.slug || 'seu-usuario'}/<strong>{newPage.slug || 'caminho-da-pagina'}</strong>
+                    Este será o caminho da sua página: {baseUrl}/{user?.slug || 'seu-usuario'}/<strong>{newPage.slug || 'caminho-da-pagina'}</strong>
                   </p>
                 </div>
 

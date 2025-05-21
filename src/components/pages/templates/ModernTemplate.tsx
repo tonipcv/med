@@ -99,7 +99,7 @@ export default function ModernTemplate({ page }: TemplateProps) {
         <div className="max-w-lg mx-auto w-full space-y-8">
           {/* Header */}
           <div className="text-center space-y-4">
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-6">
+            <div className="relative w-32 h-32 sm:w-24 sm:h-24 mx-auto mb-6">
               <div className="absolute inset-0 bg-gradient-to-r from-zinc-500 to-zinc-700 rounded-full opacity-50" />
               <img
                 src={page.avatarUrl || page.user.image || '/default-avatar.png'}

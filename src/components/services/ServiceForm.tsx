@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Service } from '@/types/service';
 
 interface ServiceFormProps {
@@ -17,7 +18,7 @@ export default function ServiceForm({ service, onSubmit, onCancel }: ServiceForm
     description: service?.description || '',
     price: service?.price || '',
     category: service?.category || '',
-    isActive: service?.isActive ?? true,
+    is_active: service?.is_active ?? true,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,34 +41,55 @@ export default function ServiceForm({ service, onSubmit, onCancel }: ServiceForm
     }));
   };
 
+  const handleSwitchChange = (checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      is_active: checked
+    }));
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Informações Básicas */}
       <div>
         <h3 className="text-sm font-medium text-gray-500 mb-3">Informações Básicas</h3>
         <div className="grid gap-4 bg-gray-50/50 p-4 rounded-lg">
-      <div className="space-y-2">
+          <div className="space-y-2">
             <Label htmlFor="name" className="text-sm text-gray-700">Nome do Serviço</Label>
-        <Input
-          id="name"
+            <Input
+              id="name"
               name="name"
-          value={formData.name}
+              value={formData.name}
               onChange={handleInputChange}
               placeholder="Ex: Consulta Inicial"
               className="bg-white/50 border-gray-200 focus:border-gray-300 text-gray-900"
-        />
-      </div>
+            />
+          </div>
 
-      <div className="space-y-2">
+          <div className="space-y-2">
             <Label htmlFor="description" className="text-sm text-gray-700">Descrição</Label>
-        <Textarea
-          id="description"
+            <Textarea
+              id="description"
               name="description"
-          value={formData.description}
+              value={formData.description}
               onChange={handleInputChange}
               placeholder="Descreva o serviço..."
               className="bg-white/50 border-gray-200 focus:border-gray-300 text-gray-900 min-h-[100px]"
-        />
+            />
+          </div>
+
+          <div className="flex items-center justify-between space-x-2">
+            <Label htmlFor="is_active" className="text-sm text-gray-700">Status do Serviço</Label>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="is_active"
+                checked={formData.is_active}
+                onCheckedChange={handleSwitchChange}
+              />
+              <Label htmlFor="is_active" className="text-sm text-gray-500">
+                {formData.is_active ? 'Ativo' : 'Inativo'}
+              </Label>
+            </div>
           </div>
         </div>
       </div>
@@ -76,9 +98,9 @@ export default function ServiceForm({ service, onSubmit, onCancel }: ServiceForm
       <div>
         <h3 className="text-sm font-medium text-gray-500 mb-3">Informações Comerciais</h3>
         <div className="grid gap-4 bg-gray-50/50 p-4 rounded-lg">
-      <div className="space-y-2">
+          <div className="space-y-2">
             <Label htmlFor="price" className="text-sm text-gray-700">Preço</Label>
-        <Input
+            <Input
               id="price"
               name="price"
               type="number"
@@ -86,8 +108,8 @@ export default function ServiceForm({ service, onSubmit, onCancel }: ServiceForm
               onChange={handleInputChange}
               placeholder="0,00"
               className="bg-white/50 border-gray-200 focus:border-gray-300 text-gray-900"
-        />
-      </div>
+            />
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="category" className="text-sm text-gray-700">Categoria</Label>
