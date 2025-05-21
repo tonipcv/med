@@ -20,10 +20,12 @@ interface BlockEditorProps {
 
 const blockTypes = [
   { type: 'BUTTON' as const, label: 'Botão' },
+  { type: 'MULTI_STEP' as const, label: 'Botão Multi-step' },
   { type: 'FORM' as const, label: 'Formulário' },
   { type: 'ADDRESS' as const, label: 'Endereço' },
   { type: 'AI_CHAT' as const, label: 'Chat de IA' },
-  { type: 'WHATSAPP' as const, label: 'WhatsApp Flutuante' }
+  { type: 'WHATSAPP' as const, label: 'WhatsApp Flutuante' },
+  { type: 'REDIRECT' as const, label: 'Redirecionamento' }
 ] as const;
 
 export function BlockEditor({ blocks, onBlocksChange, disabled = false }: BlockEditorProps) {
@@ -96,6 +98,23 @@ export function BlockEditor({ blocks, onBlocksChange, disabled = false }: BlockE
                 label: '',
                 url: ''
               }
+            : selectedBlockType === 'MULTI_STEP'
+            ? {
+                label: '',
+                modalTitle: '',
+                modalLayout: 'list',
+                modalSize: 'default',
+                showIcons: true,
+                showDescriptions: true,
+                subButtons: []
+              }
+            : selectedBlockType === 'REDIRECT'
+            ? {
+                label: 'Redirecionando...',
+                redirectUrl: '',
+                redirectDelay: 5,
+                showCountdown: true
+              }
             : selectedBlockType === 'FORM'
             ? {
                 title: '',
@@ -132,7 +151,7 @@ export function BlockEditor({ blocks, onBlocksChange, disabled = false }: BlockE
       onBlocksChange(updatedBlocks);
 
       toast.success('Bloco adicionado!', {
-        description: `O ${selectedBlockType === 'BUTTON' ? 'botão' : selectedBlockType === 'FORM' ? 'formulário' : selectedBlockType === 'ADDRESS' ? 'endereço' : selectedBlockType === 'WHATSAPP' ? 'WhatsApp Flutuante' : 'chat de IA'} foi adicionado com sucesso.`,
+        description: `O ${selectedBlockType === 'BUTTON' ? 'botão' : selectedBlockType === 'MULTI_STEP' ? 'botão multi-step' : selectedBlockType === 'FORM' ? 'formulário' : selectedBlockType === 'ADDRESS' ? 'endereço' : selectedBlockType === 'WHATSAPP' ? 'WhatsApp Flutuante' : 'chat de IA'} foi adicionado com sucesso.`,
         duration: 4000,
         position: 'top-right'
       });
@@ -278,10 +297,12 @@ export function BlockEditor({ blocks, onBlocksChange, disabled = false }: BlockE
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="BUTTON">Botão</SelectItem>
+              <SelectItem value="MULTI_STEP">Botão Multi-step</SelectItem>
               <SelectItem value="FORM">Formulário</SelectItem>
               <SelectItem value="ADDRESS">Endereço</SelectItem>
               <SelectItem value="AI_CHAT">Chat com IA</SelectItem>
               <SelectItem value="WHATSAPP">WhatsApp Flutuante</SelectItem>
+              <SelectItem value="REDIRECT">Redirecionamento</SelectItem>
             </SelectContent>
           </Select>
 
@@ -378,7 +399,7 @@ export function BlockEditor({ blocks, onBlocksChange, disabled = false }: BlockE
                     <div className="space-y-4">
                       <div className="flex items-center gap-2">
                         <Link2 className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm font-medium">Button Block</span>
+                        <span className="text-sm font-medium">Botão</span>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor={`button-label-${block.id}`}>Label</Label>
@@ -407,6 +428,275 @@ export function BlockEditor({ blocks, onBlocksChange, disabled = false }: BlockE
                           }
                           disabled={disabled}
                         />
+                      </div>
+                    </div>
+                  ) : block.type === 'MULTI_STEP' ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Link2 className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm font-medium">Botão Multi-step</span>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`button-label-${block.id}`}>Label do Botão</Label>
+                        <Input
+                          id={`button-label-${block.id}`}
+                          value={block.content.label}
+                          onChange={(e) =>
+                            handleBlockContentChange(block.id, {
+                              ...block.content,
+                              label: e.target.value,
+                            })
+                          }
+                          disabled={disabled}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`modal-title-${block.id}`}>Título do Modal</Label>
+                        <Input
+                          id={`modal-title-${block.id}`}
+                          value={block.content.modalTitle}
+                          onChange={(e) =>
+                            handleBlockContentChange(block.id, {
+                              ...block.content,
+                              modalTitle: e.target.value,
+                            })
+                          }
+                          disabled={disabled}
+                          placeholder="Deixe em branco para usar o label do botão"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Layout do Modal</Label>
+                        <Select
+                          value={block.content.modalLayout || 'list'}
+                          onValueChange={(value) =>
+                            handleBlockContentChange(block.id, {
+                              ...block.content,
+                              modalLayout: value,
+                            })
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Escolha o layout" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="list">Lista</SelectItem>
+                            <SelectItem value="grid">Grid</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Tamanho do Modal</Label>
+                        <Select
+                          value={block.content.modalSize || 'default'}
+                          onValueChange={(value) =>
+                            handleBlockContentChange(block.id, {
+                              ...block.content,
+                              modalSize: value,
+                            })
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Escolha o tamanho" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="default">Padrão</SelectItem>
+                            <SelectItem value="large">Grande</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`show-icons-${block.id}`}
+                          checked={block.content.showIcons ?? true}
+                          onChange={(e) =>
+                            handleBlockContentChange(block.id, {
+                              ...block.content,
+                              showIcons: e.target.checked,
+                            })
+                          }
+                          disabled={disabled}
+                          className="h-4 w-4 rounded border-gray-300"
+                        />
+                        <Label htmlFor={`show-icons-${block.id}`}>Mostrar ícones</Label>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`show-descriptions-${block.id}`}
+                          checked={block.content.showDescriptions ?? true}
+                          onChange={(e) =>
+                            handleBlockContentChange(block.id, {
+                              ...block.content,
+                              showDescriptions: e.target.checked,
+                            })
+                          }
+                          disabled={disabled}
+                          className="h-4 w-4 rounded border-gray-300"
+                        />
+                        <Label htmlFor={`show-descriptions-${block.id}`}>Mostrar descrições</Label>
+                      </div>
+
+                      <div className="space-y-4 border-t pt-4 mt-4">
+                        <div className="flex items-center justify-between">
+                          <Label>Sub-botões</Label>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const newSubButton = {
+                                id: Math.random().toString(36).substr(2, 9),
+                                label: '',
+                                url: '',
+                                isExternal: true,
+                              };
+                              handleBlockContentChange(block.id, {
+                                ...block.content,
+                                subButtons: [...(block.content.subButtons || []), newSubButton],
+                              });
+                            }}
+                            disabled={disabled}
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            Adicionar
+                          </Button>
+                        </div>
+
+                        <div className="space-y-4">
+                          {block.content.subButtons?.map((subButton, index) => (
+                            <Card key={subButton.id}>
+                              <CardContent className="pt-4">
+                                <div className="flex items-start gap-4">
+                                  <div className="flex-1 space-y-4">
+                                    <div className="space-y-2">
+                                      <Label>Label</Label>
+                                      <Input
+                                        value={subButton.label}
+                                        onChange={(e) => {
+                                          const newSubButtons = [...(block.content.subButtons || [])];
+                                          newSubButtons[index] = {
+                                            ...subButton,
+                                            label: e.target.value,
+                                          };
+                                          handleBlockContentChange(block.id, {
+                                            ...block.content,
+                                            subButtons: newSubButtons,
+                                          });
+                                        }}
+                                        disabled={disabled}
+                                      />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                      <Label>URL</Label>
+                                      <Input
+                                        value={subButton.url}
+                                        onChange={(e) => {
+                                          const newSubButtons = [...(block.content.subButtons || [])];
+                                          newSubButtons[index] = {
+                                            ...subButton,
+                                            url: e.target.value,
+                                          };
+                                          handleBlockContentChange(block.id, {
+                                            ...block.content,
+                                            subButtons: newSubButtons,
+                                          });
+                                        }}
+                                        disabled={disabled}
+                                      />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                      <Label>Descrição</Label>
+                                      <Input
+                                        value={subButton.description}
+                                        onChange={(e) => {
+                                          const newSubButtons = [...(block.content.subButtons || [])];
+                                          newSubButtons[index] = {
+                                            ...subButton,
+                                            description: e.target.value,
+                                          };
+                                          handleBlockContentChange(block.id, {
+                                            ...block.content,
+                                            subButtons: newSubButtons,
+                                          });
+                                        }}
+                                        disabled={disabled}
+                                      />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                      <Label>Ícone (emoji ou símbolo)</Label>
+                                      <Input
+                                        value={subButton.icon}
+                                        onChange={(e) => {
+                                          const newSubButtons = [...(block.content.subButtons || [])];
+                                          newSubButtons[index] = {
+                                            ...subButton,
+                                            icon: e.target.value,
+                                          };
+                                          handleBlockContentChange(block.id, {
+                                            ...block.content,
+                                            subButtons: newSubButtons,
+                                          });
+                                        }}
+                                        disabled={disabled}
+                                        placeholder="Ex: 📱, 📞, 💬"
+                                      />
+                                    </div>
+
+                                    <div className="flex items-center space-x-2">
+                                      <input
+                                        type="checkbox"
+                                        id={`external-${block.id}-${subButton.id}`}
+                                        checked={subButton.isExternal}
+                                        onChange={(e) => {
+                                          const newSubButtons = [...(block.content.subButtons || [])];
+                                          newSubButtons[index] = {
+                                            ...subButton,
+                                            isExternal: e.target.checked,
+                                          };
+                                          handleBlockContentChange(block.id, {
+                                            ...block.content,
+                                            subButtons: newSubButtons,
+                                          });
+                                        }}
+                                        disabled={disabled}
+                                        className="h-4 w-4 rounded border-gray-300"
+                                      />
+                                      <Label htmlFor={`external-${block.id}-${subButton.id}`}>
+                                        Abrir em nova aba
+                                      </Label>
+                                    </div>
+                                  </div>
+
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                      const newSubButtons = block.content.subButtons?.filter(
+                                        (btn) => btn.id !== subButton.id
+                                      );
+                                      handleBlockContentChange(block.id, {
+                                        ...block.content,
+                                        subButtons: newSubButtons,
+                                      });
+                                    }}
+                                    disabled={disabled}
+                                    className="text-gray-400 hover:text-red-600 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   ) : block.type === 'FORM' ? (
@@ -703,6 +993,76 @@ export function BlockEditor({ blocks, onBlocksChange, disabled = false }: BlockE
                           placeholder="Ex: Olá! Como posso ajudar?"
                           disabled={disabled}
                         />
+                      </div>
+                    </div>
+                  ) : block.type === 'REDIRECT' ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Link2 className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm font-medium">Redirecionamento</span>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`redirect-label-${block.id}`}>Texto de exibição</Label>
+                        <Input
+                          id={`redirect-label-${block.id}`}
+                          value={block.content.label}
+                          onChange={(e) =>
+                            handleBlockContentChange(block.id, {
+                              ...block.content,
+                              label: e.target.value,
+                            })
+                          }
+                          disabled={disabled}
+                          placeholder="Ex: Redirecionando para o WhatsApp..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`redirect-url-${block.id}`}>URL de redirecionamento</Label>
+                        <Input
+                          id={`redirect-url-${block.id}`}
+                          value={block.content.redirectUrl}
+                          onChange={(e) =>
+                            handleBlockContentChange(block.id, {
+                              ...block.content,
+                              redirectUrl: e.target.value,
+                            })
+                          }
+                          disabled={disabled}
+                          placeholder="Ex: https://whatsapp.com/..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`redirect-delay-${block.id}`}>Tempo de espera (segundos)</Label>
+                        <Input
+                          id={`redirect-delay-${block.id}`}
+                          type="number"
+                          min="1"
+                          max="60"
+                          value={block.content.redirectDelay}
+                          onChange={(e) =>
+                            handleBlockContentChange(block.id, {
+                              ...block.content,
+                              redirectDelay: parseInt(e.target.value) || 5,
+                            })
+                          }
+                          disabled={disabled}
+                        />
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`show-countdown-${block.id}`}
+                          checked={block.content.showCountdown}
+                          onChange={(e) =>
+                            handleBlockContentChange(block.id, {
+                              ...block.content,
+                              showCountdown: e.target.checked,
+                            })
+                          }
+                          disabled={disabled}
+                          className="h-4 w-4 rounded border-gray-300"
+                        />
+                        <Label htmlFor={`show-countdown-${block.id}`}>Mostrar contagem regressiva</Label>
                       </div>
                     </div>
                   ) : (

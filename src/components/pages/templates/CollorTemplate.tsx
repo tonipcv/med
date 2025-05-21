@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { FormModal } from '@/components/FormModal';
 import { LocationMap } from '@/components/ui/location-map';
 import { Address } from '@/components/ui/address-manager';
+import { MultiStepModal } from '@/components/ui/multi-step-modal';
+import { RedirectBlock } from '@/components/blocks/RedirectBlock';
 
 interface CollorTemplateProps {
   page: {
@@ -21,7 +23,7 @@ interface CollorTemplateProps {
     primaryColor: string;
     blocks: Array<{
       id: string;
-      type: 'BUTTON' | 'FORM' | 'ADDRESS';
+      type: 'BUTTON' | 'FORM' | 'ADDRESS' | 'MULTI_STEP' | 'REDIRECT';
       content: {
         title?: string;
         label?: string;
@@ -66,7 +68,8 @@ const adjustColor = (color: string, amount: number) => {
 
 const CollorTemplate = ({ page }: CollorTemplateProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeFormBlock, setActiveFormBlock] = useState<any>(null);
+  const [activeFormBlock, setActiveFormBlock] = useState<typeof page.blocks[0] | null>(null);
+  const [activeMultiStepBlock, setActiveMultiStepBlock] = useState<typeof page.blocks[0] | null>(null);
 
   // Gerar cores para o gradiente baseado na cor primária
   const primaryColor = page.primaryColor || '#000000';
@@ -194,6 +197,24 @@ const CollorTemplate = ({ page }: CollorTemplateProps) => {
               );
             }
 
+            if (block.type === 'MULTI_STEP') {
+              return (
+                <Button
+                  key={block.id}
+                  className={cn(
+                    "w-full py-6 text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-xl",
+                  )}
+                  style={{ 
+                    background: `linear-gradient(135deg, ${lighterColor} 0%, ${darkerColor} 100%)`,
+                    color: 'white',
+                  }}
+                  onClick={() => setActiveMultiStepBlock(block)}
+                >
+                  {block.content.label}
+                </Button>
+              );
+            }
+
             if (block.type === 'FORM') {
               if (block.content.isModal) {
                 return (
@@ -315,6 +336,12 @@ const CollorTemplate = ({ page }: CollorTemplateProps) => {
               );
             }
 
+            if (block.type === 'REDIRECT') {
+              return (
+                <RedirectBlock key={block.id} block={block} />
+              );
+            }
+
             return null;
           })}
         </div>
@@ -337,6 +364,15 @@ const CollorTemplate = ({ page }: CollorTemplateProps) => {
           primaryColor={primaryColor}
           pipelineId={activeFormBlock.content.pipelineId}
           successPage={activeFormBlock.content.successPage}
+        />
+      )}
+
+      {/* Multi-step Modal */}
+      {activeMultiStepBlock && (
+        <MultiStepModal
+          isOpen={true}
+          onClose={() => setActiveMultiStepBlock(null)}
+          block={activeMultiStepBlock}
         />
       )}
     </div>

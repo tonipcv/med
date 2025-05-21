@@ -11,6 +11,7 @@ import ModernTemplate from './templates/ModernTemplate';
 import MinimalTemplate from './templates/MinimalTemplate';
 import ClassicTemplate from './templates/ClassicTemplate';
 import CollorTemplate from './templates/CollorTemplate';
+import LightTemplate from './templates/LightTemplate';
 
 type SocialPlatform = 'INSTAGRAM' | 'WHATSAPP' | 'YOUTUBE' | 'FACEBOOK' | 'LINKEDIN' | 'TIKTOK' | 'TWITTER';
 
@@ -63,7 +64,7 @@ interface PageContent {
   primaryColor: string;
   blocks: Array<{
     id: string;
-    type: 'BUTTON' | 'FORM';
+    type: 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP';
     content: any;
     order: number;
   }>;
@@ -77,6 +78,7 @@ interface PageContent {
     name: string;
     image: string | null;
     specialty: string | null;
+    phone: string | null;
   };
 }
 
@@ -145,7 +147,7 @@ const ReferralPage: React.FC<ReferralPageProps> = ({ referral }) => {
     primaryColor: referral.page.primaryColor,
     blocks: referral.page.blocks.sort((a, b) => a.order - b.order).map(block => ({
       ...block,
-      type: block.type as 'BUTTON' | 'FORM'
+      type: block.type as 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP'
     })),
     socialLinks: referral.page.socialLinks.map(link => ({
       id: link.id,
@@ -156,7 +158,8 @@ const ReferralPage: React.FC<ReferralPageProps> = ({ referral }) => {
       id: referral.user.id,
       name: referral.user.name,
       image: referral.user.image,
-      specialty: referral.user.specialty || null
+      specialty: referral.user.specialty || null,
+      phone: referral.user.phone || null
     },
   };
 
@@ -170,6 +173,8 @@ const ReferralPage: React.FC<ReferralPageProps> = ({ referral }) => {
       return <MinimalTemplate page={pageContent} />;
     case 'collor':
       return <CollorTemplate page={pageContent} />;
+    case 'light':
+      return <LightTemplate page={pageContent} />;
     case 'classic':
     default:
       return <ClassicTemplate page={pageContent} />;

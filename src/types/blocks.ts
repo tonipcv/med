@@ -1,4 +1,4 @@
-export type BlockType = 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP';
+export type BlockType = 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP' | 'MULTI_STEP' | 'REDIRECT';
 
 export interface Block {
   id: string;
@@ -22,6 +22,24 @@ export interface Block {
     hasButton?: boolean;
     buttonLabel?: string;
     buttonUrl?: string;
+    // Multi-step specific properties
+    subButtons?: Array<{
+      id: string;
+      label: string;
+      url?: string;
+      icon?: string;
+      description?: string;
+      color?: string;
+      isExternal?: boolean;
+    }>;
+    modalSize?: 'default' | 'large';
+    modalLayout?: 'grid' | 'list';
+    showIcons?: boolean;
+    showDescriptions?: boolean;
+    // Redirect specific properties
+    redirectUrl?: string;
+    redirectDelay?: number; // delay in seconds
+    showCountdown?: boolean;
   };
   order: number;
 }

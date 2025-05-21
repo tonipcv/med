@@ -127,12 +127,13 @@ export function PageEditor({ pageId }: PageEditorProps) {
       console.error('Error updating blocks:', error);
       toast.error(error instanceof Error ? error.message : 'Error updating blocks');
       
+      // Fetch latest page state to ensure UI consistency
       const pageResponse = await fetch(`/api/pages/${pageId}`);
       if (pageResponse.ok) {
         const updatedPage = await pageResponse.json();
         setPage(updatedPage);
       }
-      throw error;
+      // Don't re-throw the error since we've handled it and recovered
     }
   };
 
@@ -486,6 +487,7 @@ export function PageEditor({ pageId }: PageEditorProps) {
                       <SelectItem value="minimal">Minimalista</SelectItem>
                       <SelectItem value="collor">Collor</SelectItem>
                       <SelectItem value="bentodark">Bento Dark</SelectItem>
+                      <SelectItem value="light">Light</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-gray-500">

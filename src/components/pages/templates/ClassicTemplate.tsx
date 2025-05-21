@@ -12,6 +12,8 @@ import { Address } from '@/components/ui/address-manager';
 import { AiChatWidget } from '@/components/AiChatWidget';
 import { WhatsAppButton } from '@/components/ui/whatsapp-button';
 import { cn } from '@/lib/utils';
+import { MultiStepModal } from '@/components/ui/multi-step-modal';
+import { RedirectBlock } from '@/components/blocks/RedirectBlock';
 
 const PLATFORM_ICONS = {
   INSTAGRAM: Instagram,
@@ -48,7 +50,7 @@ interface ClassicTemplateProps {
     primaryColor: string;
     blocks: Array<{
       id: string;
-      type: 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP';
+      type: 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP' | 'MULTI_STEP' | 'REDIRECT';
       content: {
         title?: string;
         label?: string;
@@ -92,6 +94,7 @@ interface ClassicTemplateProps {
 export default function ClassicTemplate({ page }: ClassicTemplateProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeFormBlock, setActiveFormBlock] = useState<typeof page.blocks[0] | null>(null);
+  const [activeMultiStepBlock, setActiveMultiStepBlock] = useState<typeof page.blocks[0] | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, block: typeof page.blocks[0]) => {
     e.preventDefault();
@@ -181,6 +184,24 @@ export default function ClassicTemplate({ page }: ClassicTemplateProps) {
                   >
                     {block.content.label}
                   </a>
+                </Button>
+              );
+            }
+
+            if (block.type === 'MULTI_STEP') {
+              return (
+                <Button
+                  key={block.id}
+                  className={cn(
+                    "w-full py-4 sm:py-5 text-sm sm:text-base font-normal tracking-wide",
+                    "bg-white hover:bg-gray-50 border border-gray-200 text-gray-900",
+                    "shadow-sm hover:shadow-md",
+                    "transition-all duration-300",
+                    "transform hover:scale-[1.01] active:scale-[0.99]"
+                  )}
+                  onClick={() => setActiveMultiStepBlock(block)}
+                >
+                  {block.content.label}
                 </Button>
               );
             }
@@ -344,6 +365,12 @@ export default function ClassicTemplate({ page }: ClassicTemplateProps) {
               ) : null;
             }
 
+            if (block.type === 'REDIRECT') {
+              return (
+                <RedirectBlock block={block} />
+              );
+            }
+
             return null;
           })}
         </div>
@@ -386,6 +413,15 @@ export default function ClassicTemplate({ page }: ClassicTemplateProps) {
           primaryColor={page.primaryColor}
           pipelineId={activeFormBlock.content.pipelineId}
           successPage={activeFormBlock.content.successPage}
+        />
+      )}
+
+      {/* Multi-step Modal */}
+      {activeMultiStepBlock && (
+        <MultiStepModal
+          isOpen={true}
+          onClose={() => setActiveMultiStepBlock(null)}
+          block={activeMultiStepBlock}
         />
       )}
     </div>

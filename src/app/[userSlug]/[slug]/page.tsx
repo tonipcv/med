@@ -7,6 +7,7 @@ import ModernTemplate from '@/components/pages/templates/ModernTemplate';
 import MinimalTemplate from '@/components/pages/templates/MinimalTemplate';
 import CollorTemplate from '@/components/pages/templates/CollorTemplate';
 import BentoDarkTemplate from '@/components/pages/templates/BentoDarkTemplate';
+import LightTemplate from '@/components/pages/templates/LightTemplate';
 import { ReferralPage } from '@/components/pages';
 import { AiChatWidget } from '@/components/AiChatWidget';
 
@@ -148,7 +149,7 @@ function transformPageContent(page: any, templateType: string): any {
     primaryColor: page.primaryColor,
     blocks: page.blocks.map((block: any) => ({
       id: block.id,
-      type: block.type as 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP',
+      type: block.type as 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP' | 'MULTI_STEP',
       content: {
         title: block.content.title,
         label: block.content.label,
@@ -167,7 +168,13 @@ function transformPageContent(page: any, templateType: string): any {
         whatsappNumber: block.content.whatsappNumber,
         hasButton: block.content.hasButton,
         buttonLabel: block.content.buttonLabel,
-        buttonUrl: block.content.buttonUrl
+        buttonUrl: block.content.buttonUrl,
+        // Multi-step specific properties
+        subButtons: block.content.subButtons,
+        modalSize: block.content.modalSize,
+        modalLayout: block.content.modalLayout,
+        showIcons: block.content.showIcons,
+        showDescriptions: block.content.showDescriptions
       },
       order: block.order
     })),
@@ -427,6 +434,8 @@ export default async function DynamicPage({ params }: PageProps) {
           return <CollorTemplate page={pageContent} />;
         case 'bentodark':
           return <BentoDarkTemplate page={pageContent} />;
+        case 'light':
+          return <LightTemplate page={pageContent} />;
         case 'classic':
         default:
           return <ClassicTemplate page={pageContent} />;
@@ -445,6 +454,8 @@ export default async function DynamicPage({ params }: PageProps) {
           return <CollorTemplate page={pageContent} />;
         case 'bentodark':
           return <BentoDarkTemplate page={pageContent} />;
+        case 'light':
+          return <LightTemplate page={pageContent} />;
         case 'classic':
         default:
           return <ClassicTemplate page={pageContent} />;

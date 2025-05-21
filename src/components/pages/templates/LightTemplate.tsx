@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Instagram, Youtube, Facebook, Linkedin, Twitter, MessageCircle, MapPin, Menu } from 'lucide-react';
+import { Instagram, Youtube, Facebook, Linkedin, Twitter, MessageCircle, MapPin } from 'lucide-react';
 import { BsPatchCheckFill } from 'react-icons/bs';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -11,12 +11,6 @@ import { LocationMap } from '@/components/ui/location-map';
 import { Address } from '@/components/ui/address-manager';
 import { AiChatWidget } from '@/components/AiChatWidget';
 import { WhatsAppButton } from '@/components/ui/whatsapp-button';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTrigger,
-} from '@/components/ui/sheet';
 import { MultiStepModal } from '@/components/ui/multi-step-modal';
 import { RedirectBlock } from '@/components/blocks/RedirectBlock';
 
@@ -46,7 +40,7 @@ const VerifiedBadge = () => (
   </svg>
 );
 
-interface ModernTemplateProps {
+interface LightTemplateProps {
   page: {
     id: string;
     title: string;
@@ -90,7 +84,7 @@ interface ModernTemplateProps {
   };
 }
 
-export default function ModernTemplate({ page }: ModernTemplateProps) {
+export default function LightTemplate({ page }: LightTemplateProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeFormBlock, setActiveFormBlock] = useState<typeof page.blocks[0] | null>(null);
   const [activeMultiStepBlock, setActiveMultiStepBlock] = useState<typeof page.blocks[0] | null>(null);
@@ -119,7 +113,6 @@ export default function ModernTemplate({ page }: ModernTemplateProps) {
         throw new Error('Erro ao enviar formulário');
       }
 
-      // Limpa o formulário
       form.reset();
     } catch (error) {
       console.error('Erro ao enviar formulário:', error);
@@ -127,10 +120,10 @@ export default function ModernTemplate({ page }: ModernTemplateProps) {
   };
 
   return (
-    <div className="relative min-h-screen bg-black md:bg-black text-white font-[system-ui,-apple-system,BlinkMacSystemFont,Segoe_UI,Roboto,Oxygen,Ubuntu,Cantarell,Open_Sans,Helvetica_Neue,sans-serif] flex flex-col">
-      {/* Mobile Gradient Border */}
+    <div className="relative min-h-screen bg-white text-gray-900 font-[system-ui,-apple-system,BlinkMacSystemFont,Segoe_UI,Roboto,Oxygen,Ubuntu,Cantarell,Open_Sans,Helvetica_Neue,sans-serif] flex flex-col">
+      {/* Subtle gradient border */}
       <div className="md:hidden fixed inset-0 p-[1px] pointer-events-none">
-        <div className="w-full h-full rounded-none bg-gradient-to-b from-white/10 via-zinc-500/5 to-white/10" />
+        <div className="w-full h-full rounded-none bg-gradient-to-b from-gray-200 via-gray-100 to-gray-200" />
       </div>
       
       <div className="relative flex-1 py-16 px-4 sm:px-6">
@@ -143,24 +136,24 @@ export default function ModernTemplate({ page }: ModernTemplateProps) {
           {/* Header */}
           <div className="text-center space-y-4">
             <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-6">
-              <div className="absolute inset-0 bg-gradient-to-r from-zinc-500 to-zinc-700 rounded-full opacity-50" />
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full opacity-50" />
               <img
                 src={page.avatarUrl || page.user.image || '/default-avatar.png'}
                 alt={page.user.name}
-                className="relative w-full h-full object-cover rounded-full border-4 border-zinc-800"
+                className="relative w-full h-full object-cover rounded-full border-4 border-gray-100 shadow-lg"
               />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extralight tracking-tight bg-gradient-to-b from-white via-gray-300 to-gray-500 bg-clip-text text-transparent flex items-center justify-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-extralight tracking-tight text-gray-900 flex items-center justify-center gap-2">
               {page.user.name}
               <div className="rounded-full">
-                <BsPatchCheckFill size={20} className="text-white/80" />
+                <BsPatchCheckFill size={20} className="text-blue-500" />
               </div>
             </h1>
             {page.user.specialty && (
-              <p className="text-base sm:text-lg bg-gradient-to-r from-zinc-300 to-zinc-500 bg-clip-text text-transparent font-light tracking-wide">{page.user.specialty}</p>
+              <p className="text-base sm:text-lg text-gray-600 font-light tracking-wide">{page.user.specialty}</p>
             )}
             {page.subtitle && (
-              <p className="text-sm sm:text-base text-zinc-400 font-light tracking-wide">{page.subtitle}</p>
+              <p className="text-sm sm:text-base text-gray-500 font-light tracking-wide">{page.subtitle}</p>
             )}
           </div>
 
@@ -171,14 +164,14 @@ export default function ModernTemplate({ page }: ModernTemplateProps) {
                 return (
                   <Button
                     key={block.id}
-                    className="w-full py-5 sm:py-6 text-base sm:text-lg font-light tracking-wide shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-2xl bg-zinc-900 hover:bg-zinc-800 border-2 border-zinc-800/50 backdrop-blur-sm relative overflow-hidden before:absolute before:inset-0 before:border-2 before:border-white/10 before:rounded-2xl before:scale-[1.01]"
+                    className="w-full py-5 sm:py-6 text-base sm:text-lg font-light tracking-wide shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-2xl bg-white hover:bg-gray-50 border border-gray-200 relative overflow-hidden before:absolute before:inset-0 before:border before:border-gray-100 before:rounded-2xl before:scale-[1.01] text-gray-800"
                     asChild
                   >
                     <a
                       href={block.content.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-3"
+                      className="flex items-center justify-center gap-3 text-gray-800"
                     >
                       {block.content.label}
                     </a>
@@ -190,7 +183,7 @@ export default function ModernTemplate({ page }: ModernTemplateProps) {
                 return (
                   <Button
                     key={block.id}
-                    className="w-full py-5 sm:py-6 text-base sm:text-lg font-light tracking-wide shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-2xl bg-zinc-900 hover:bg-zinc-800 border-2 border-zinc-800/50 backdrop-blur-sm relative overflow-hidden before:absolute before:inset-0 before:border-2 before:border-white/10 before:rounded-2xl before:scale-[1.01]"
+                    className="w-full py-5 sm:py-6 text-base sm:text-lg font-light tracking-wide shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-2xl bg-white hover:bg-gray-50 border border-gray-200 relative overflow-hidden before:absolute before:inset-0 before:border before:border-gray-100 before:rounded-2xl before:scale-[1.01] text-gray-800"
                     onClick={() => setActiveMultiStepBlock(block)}
                   >
                     {block.content.label}
@@ -203,7 +196,7 @@ export default function ModernTemplate({ page }: ModernTemplateProps) {
                   return (
                     <Button
                       key={block.id}
-                      className="w-full py-5 sm:py-6 text-base sm:text-lg font-light tracking-wide shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-2xl bg-zinc-900 hover:bg-zinc-800 border-2 border-zinc-800/50 backdrop-blur-sm relative overflow-hidden before:absolute before:inset-0 before:border-2 before:border-white/10 before:rounded-2xl before:scale-[1.01]"
+                      className="w-full py-5 sm:py-6 text-base sm:text-lg font-light tracking-wide shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-2xl bg-white hover:bg-gray-50 border border-gray-200 relative overflow-hidden before:absolute before:inset-0 before:border before:border-gray-100 before:rounded-2xl before:scale-[1.01] text-gray-800"
                       onClick={() => {
                         setActiveFormBlock(block);
                         setIsModalOpen(true);
@@ -217,48 +210,46 @@ export default function ModernTemplate({ page }: ModernTemplateProps) {
                 return (
                   <div
                     key={block.id}
-                    className="bg-zinc-900 rounded-2xl shadow-xl p-8 transform transition-all duration-300 hover:shadow-2xl border border-zinc-800"
+                    className="bg-white rounded-2xl shadow-md p-8 transform transition-all duration-300 hover:shadow-lg border border-gray-200"
                   >
-                    <h2 
-                      className="text-2xl font-extralight mb-6 bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent tracking-wide"
-                    >
+                    <h2 className="text-2xl font-extralight mb-6 text-gray-900 tracking-wide">
                       {block.content.title}
                     </h2>
                     <form onSubmit={(e) => handleSubmit(e, block)} className="space-y-6">
                       <div>
-                        <Label htmlFor="name" className="text-sm text-zinc-400 font-light">Nome</Label>
+                        <Label htmlFor="name" className="text-sm text-gray-600 font-light">Nome</Label>
                         <Input 
                           id="name" 
                           name="name"
                           placeholder="Seu nome completo"
-                          className="mt-2 bg-zinc-800/50 border-zinc-700 focus:border-zinc-600 font-light"
+                          className="mt-2 bg-gray-50 border-gray-200 focus:border-gray-300 font-light"
                           required
                         />
                       </div>
                       <div>
-                        <Label htmlFor="email" className="text-sm text-zinc-400 font-light">Email</Label>
+                        <Label htmlFor="email" className="text-sm text-gray-600 font-light">Email</Label>
                         <Input 
                           id="email" 
                           name="email"
                           type="email"
                           placeholder="seu@email.com"
-                          className="mt-2 bg-zinc-800/50 border-zinc-700 focus:border-zinc-600 font-light"
+                          className="mt-2 bg-gray-50 border-gray-200 focus:border-gray-300 font-light"
                           required
                         />
                       </div>
                       <div>
-                        <Label htmlFor="phone" className="text-sm text-zinc-400 font-light">WhatsApp</Label>
+                        <Label htmlFor="phone" className="text-sm text-gray-600 font-light">WhatsApp</Label>
                         <Input 
                           id="phone" 
                           name="phone"
                           placeholder="(00) 00000-0000"
-                          className="mt-2 bg-zinc-800/50 border-zinc-700 focus:border-zinc-600 font-light"
+                          className="mt-2 bg-gray-50 border-gray-200 focus:border-gray-300 font-light"
                           required
                         />
                       </div>
                       <Button 
                         type="submit"
-                        className="w-full py-6 text-lg font-light tracking-wide shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-xl bg-white text-black hover:bg-zinc-100"
+                        className="w-full py-6 text-lg font-light tracking-wide shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-xl bg-gray-900 text-white hover:bg-gray-800"
                       >
                         Enviar
                       </Button>
@@ -278,20 +269,18 @@ export default function ModernTemplate({ page }: ModernTemplateProps) {
                 return (
                   <div
                     key={block.id}
-                    className="bg-zinc-900 rounded-2xl shadow-xl transform transition-all duration-300 hover:shadow-2xl border border-zinc-800 overflow-hidden"
+                    className="bg-white rounded-2xl shadow-md transform transition-all duration-300 hover:shadow-lg border border-gray-200 overflow-hidden"
                   >
                     <div className="p-4">
-                      <h2 
-                        className="text-base sm:text-lg font-extralight mb-2 bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent tracking-wide flex items-center gap-2"
-                      >
-                        <MapPin size={16} className="text-zinc-400" />
+                      <h2 className="text-base sm:text-lg font-extralight mb-2 text-gray-900 tracking-wide flex items-center gap-2">
+                        <MapPin size={16} className="text-gray-600" />
                         {block.content.city || 'Location'}
                       </h2>
                     </div>
                     <div className="h-[150px] sm:h-[180px] w-full">
                       <LocationMap 
                         addresses={[addressObject]} 
-                        primaryColor="#000000"
+                        primaryColor="#111111"
                       />
                     </div>
                   </div>
@@ -338,7 +327,7 @@ export default function ModernTemplate({ page }: ModernTemplateProps) {
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="transform transition-all duration-300 hover:scale-110 text-zinc-400 hover:text-white"
+                    className="transform transition-all duration-300 hover:scale-110 text-gray-500 hover:text-gray-900"
                   >
                     <Icon className="h-7 w-7" />
                   </a>
@@ -351,7 +340,7 @@ export default function ModernTemplate({ page }: ModernTemplateProps) {
 
       {/* Footer */}
       <div className="relative w-full mt-20 pb-6">
-        <div className="text-center text-sm text-zinc-600 font-light tracking-wide">
+        <div className="text-center text-sm text-gray-500 font-light tracking-wide">
           <a 
             href="https://med1.app/auth/register" 
             target="_blank" 
@@ -372,7 +361,7 @@ export default function ModernTemplate({ page }: ModernTemplateProps) {
             setActiveFormBlock(null);
           }}
           title={activeFormBlock.content.modalTitle || activeFormBlock.content.title || ''}
-          primaryColor="#000000"
+          primaryColor="#111111"
           pipelineId={activeFormBlock.content.pipelineId}
           successPage={activeFormBlock.content.successPage}
         />

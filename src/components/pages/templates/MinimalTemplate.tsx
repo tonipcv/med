@@ -10,6 +10,8 @@ import { LocationMap } from '@/components/ui/location-map';
 import { Address } from '@/components/ui/address-manager';
 import { AiChatWidget } from '@/components/AiChatWidget';
 import { WhatsAppButton } from '@/components/ui/whatsapp-button';
+import { MultiStepModal } from '@/components/ui/multi-step-modal';
+import { RedirectBlock } from '@/components/blocks/RedirectBlock';
 
 const PLATFORM_ICONS = {
   INSTAGRAM: Instagram,
@@ -47,7 +49,7 @@ interface MinimalTemplateProps {
     primaryColor: string;
     blocks: Array<{
       id: string;
-      type: 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP';
+      type: 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP' | 'MULTI_STEP' | 'REDIRECT';
       content: {
         title?: string;
         label?: string;
@@ -85,6 +87,7 @@ interface MinimalTemplateProps {
 export default function MinimalTemplate({ page }: MinimalTemplateProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeFormBlock, setActiveFormBlock] = useState<typeof page.blocks[0] | null>(null);
+  const [activeMultiStepBlock, setActiveMultiStepBlock] = useState<typeof page.blocks[0] | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, block: typeof page.blocks[0]) => {
     e.preventDefault();
@@ -172,6 +175,22 @@ export default function MinimalTemplate({ page }: MinimalTemplateProps) {
                   >
                     {block.content.label}
                   </a>
+                </Button>
+              );
+            }
+
+            if (block.type === 'MULTI_STEP') {
+              return (
+                <Button
+                  key={block.id}
+                  className="w-full py-2.5 text-sm font-normal rounded shadow-sm hover:shadow transition-all duration-300"
+                  style={{
+                    backgroundColor: primaryColor,
+                    color: 'white',
+                  }}
+                  onClick={() => setActiveMultiStepBlock(block)}
+                >
+                  {block.content.label}
                 </Button>
               );
             }
@@ -354,9 +373,18 @@ export default function MinimalTemplate({ page }: MinimalTemplateProps) {
             setActiveFormBlock(null);
           }}
           title={activeFormBlock.content.modalTitle || activeFormBlock.content.title || ''}
-          primaryColor={page.primaryColor}
+          primaryColor={primaryColor}
           pipelineId={activeFormBlock.content.pipelineId}
           successPage={activeFormBlock.content.successPage}
+        />
+      )}
+
+      {/* Multi-step Modal */}
+      {activeMultiStepBlock && (
+        <MultiStepModal
+          isOpen={true}
+          onClose={() => setActiveMultiStepBlock(null)}
+          block={activeMultiStepBlock}
         />
       )}
     </div>

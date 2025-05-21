@@ -10,6 +10,8 @@ import { LocationMap } from '@/components/ui/location-map';
 import { Address } from '@/components/ui/address-manager';
 import { AiChatWidget } from '@/components/AiChatWidget';
 import { WhatsAppButton } from '@/components/ui/whatsapp-button';
+import { MultiStepModal } from '@/components/ui/multi-step-modal';
+import { RedirectBlock } from '@/components/blocks/RedirectBlock';
 
 interface BentoDarkTemplateProps {
   page: {
@@ -20,7 +22,7 @@ interface BentoDarkTemplateProps {
     primaryColor: string;
     blocks: Array<{
       id: string;
-      type: 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP';
+      type: 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP' | 'MULTI_STEP' | 'REDIRECT';
       content: {
         title?: string;
         label?: string;
@@ -73,7 +75,8 @@ const adjustColor = (color: string, amount: number) => {
 
 const BentoDarkTemplate = ({ page }: BentoDarkTemplateProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeFormBlock, setActiveFormBlock] = useState<any>(null);
+  const [activeFormBlock, setActiveFormBlock] = useState<typeof page.blocks[0] | null>(null);
+  const [activeMultiStepBlock, setActiveMultiStepBlock] = useState<typeof page.blocks[0] | null>(null);
 
   // Gerar cores para o gradiente baseado na cor primária
   const primaryColor = page.primaryColor || '#0070F3';
@@ -149,6 +152,28 @@ const BentoDarkTemplate = ({ page }: BentoDarkTemplateProps) => {
                     <span className="text-center z-10">{block.content.label}</span>
                     <ArrowUpRight className="absolute right-6 w-12 h-12 opacity-80" />
                   </a>
+                </Button>
+              );
+            }
+
+            if (block.type === 'MULTI_STEP') {
+              return (
+                <Button
+                  key={block.id}
+                  className={cn(
+                    "w-full h-full min-h-[100px] text-lg font-medium transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] rounded-2xl border border-white/10 text-white",
+                    index % 3 === 0 ? "md:col-span-2" : ""
+                  )}
+                  style={{ 
+                    background: `linear-gradient(135deg, ${primaryColor}40 0%, ${darkerColor}60 100%)`,
+                    backdropFilter: 'blur(10px)',
+                  }}
+                  onClick={() => setActiveMultiStepBlock(block)}
+                >
+                  <div className="relative flex items-center justify-center w-full p-6 h-full text-white">
+                    <span className="text-center z-10">{block.content.label}</span>
+                    <ArrowUpRight className="absolute right-6 w-12 h-12 opacity-80" />
+                  </div>
                 </Button>
               );
             }
@@ -294,6 +319,12 @@ const BentoDarkTemplate = ({ page }: BentoDarkTemplateProps) => {
               ) : null;
             }
 
+            if (block.type === 'REDIRECT') {
+              return (
+                <RedirectBlock block={block} />
+              );
+            }
+
             return null;
           })}
         </div>
@@ -336,6 +367,15 @@ const BentoDarkTemplate = ({ page }: BentoDarkTemplateProps) => {
           primaryColor={primaryColor}
           pipelineId={activeFormBlock.content.pipelineId}
           successPage={activeFormBlock.content.successPage}
+        />
+      )}
+
+      {/* Multi-step Modal */}
+      {activeMultiStepBlock && (
+        <MultiStepModal
+          isOpen={true}
+          onClose={() => setActiveMultiStepBlock(null)}
+          block={activeMultiStepBlock}
         />
       )}
     </div>
