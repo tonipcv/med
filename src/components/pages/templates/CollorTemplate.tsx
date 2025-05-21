@@ -13,44 +13,7 @@ import { LocationMap } from '@/components/ui/location-map';
 import { Address } from '@/components/ui/address-manager';
 import { MultiStepModal } from '@/components/ui/multi-step-modal';
 import { RedirectBlock } from '@/components/blocks/RedirectBlock';
-
-interface CollorTemplateProps {
-  page: {
-    id: string;
-    title: string;
-    subtitle: string | null;
-    avatarUrl: string | null;
-    primaryColor: string;
-    blocks: Array<{
-      id: string;
-      type: 'BUTTON' | 'FORM' | 'ADDRESS' | 'MULTI_STEP' | 'REDIRECT';
-      content: {
-        title?: string;
-        label?: string;
-        url?: string;
-        pipelineId?: string;
-        isModal?: boolean;
-        modalTitle?: string;
-        successPage?: string;
-        address?: string;
-        city?: string;
-        state?: string;
-        zipCode?: string;
-        country?: string;
-      };
-    }>;
-    socialLinks: Array<{
-      platform: 'INSTAGRAM' | 'WHATSAPP' | 'YOUTUBE' | 'FACEBOOK' | 'LINKEDIN' | 'TWITTER';
-      url: string;
-    }>;
-    user: {
-      id: string;
-      name: string;
-      image: string | null;
-      specialty: string | null;
-    };
-  };
-}
+import { TemplateProps } from '@/types/templates';
 
 const SOCIAL_ICONS = {
   INSTAGRAM: Instagram,
@@ -66,7 +29,7 @@ const adjustColor = (color: string, amount: number) => {
   return '#' + color.replace(/^#/, '').replace(/../g, color => ('0' + Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
 };
 
-const CollorTemplate = ({ page }: CollorTemplateProps) => {
+const CollorTemplate = ({ page }: TemplateProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeFormBlock, setActiveFormBlock] = useState<typeof page.blocks[0] | null>(null);
   const [activeMultiStepBlock, setActiveMultiStepBlock] = useState<typeof page.blocks[0] | null>(null);
@@ -216,7 +179,7 @@ const CollorTemplate = ({ page }: CollorTemplateProps) => {
             }
 
             if (block.type === 'FORM') {
-              if (block.content.isModal) {
+              if (block.content.showInModal) {
                 return (
                   <Button
                     key={block.id}

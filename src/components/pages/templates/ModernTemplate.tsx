@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/sheet';
 import { MultiStepModal } from '@/components/ui/multi-step-modal';
 import { RedirectBlock } from '@/components/blocks/RedirectBlock';
+import { TemplateProps } from '@/types/templates';
 
 const PLATFORM_ICONS = {
   INSTAGRAM: Instagram,
@@ -28,7 +29,7 @@ const PLATFORM_ICONS = {
   TWITTER: Twitter,
   WHATSAPP: MessageCircle,
   TIKTOK: MessageCircle,
-};
+} as const;
 
 const VerifiedBadge = () => (
   <svg
@@ -46,51 +47,7 @@ const VerifiedBadge = () => (
   </svg>
 );
 
-interface ModernTemplateProps {
-  page: {
-    id: string;
-    title: string;
-    subtitle: string | null;
-    avatarUrl: string | null;
-    primaryColor: string;
-    blocks: Array<{
-      id: string;
-      type: 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP' | 'MULTI_STEP' | 'REDIRECT';
-      content: {
-        title?: string;
-        label?: string;
-        url?: string;
-        pipelineId?: string;
-        isModal?: boolean;
-        modalTitle?: string;
-        successPage?: string;
-        address?: string;
-        city?: string;
-        state?: string;
-        zipCode?: string;
-        country?: string;
-        buttonTitle?: string;
-        greeting?: string;
-        whatsappNumber?: string;
-      };
-      order: number;
-    }>;
-    socialLinks: Array<{
-      id: string;
-      platform: keyof typeof PLATFORM_ICONS;
-      url: string;
-    }>;
-    user: {
-      id: string;
-      name: string;
-      image: string | null;
-      specialty: string | null;
-      phone: string | null;
-    };
-  };
-}
-
-export default function ModernTemplate({ page }: ModernTemplateProps) {
+export default function ModernTemplate({ page }: TemplateProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeFormBlock, setActiveFormBlock] = useState<typeof page.blocks[0] | null>(null);
   const [activeMultiStepBlock, setActiveMultiStepBlock] = useState<typeof page.blocks[0] | null>(null);
@@ -199,7 +156,7 @@ export default function ModernTemplate({ page }: ModernTemplateProps) {
               }
 
               if (block.type === 'FORM') {
-                if (block.content.isModal) {
+                if (Boolean(block.content.showInModal)) {
                   return (
                     <Button
                       key={block.id}
@@ -209,7 +166,7 @@ export default function ModernTemplate({ page }: ModernTemplateProps) {
                         setIsModalOpen(true);
                       }}
                     >
-                      {block.content.title}
+                      {block.content.title || 'Abrir Formulário'}
                     </Button>
                   );
                 }
@@ -375,6 +332,8 @@ export default function ModernTemplate({ page }: ModernTemplateProps) {
           primaryColor="#000000"
           pipelineId={activeFormBlock.content.pipelineId}
           successPage={activeFormBlock.content.successPage}
+          formId={activeFormBlock.content.formId}
+          onSubmit={(data) => handleSubmit(data, activeFormBlock)}
         />
       )}
 

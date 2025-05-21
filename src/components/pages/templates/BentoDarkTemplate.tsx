@@ -28,7 +28,7 @@ interface BentoDarkTemplateProps {
         label?: string;
         url?: string;
         pipelineId?: string;
-        isModal?: boolean;
+        showInModal?: boolean;
         modalTitle?: string;
         successPage?: string;
         address?: string;
@@ -179,7 +179,7 @@ const BentoDarkTemplate = ({ page }: BentoDarkTemplateProps) => {
             }
 
             if (block.type === 'FORM') {
-              if (block.content.isModal) {
+              if (block.content.showInModal) {
                 return (
                   <Button
                     key={block.id}

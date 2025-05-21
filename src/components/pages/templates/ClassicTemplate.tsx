@@ -14,6 +14,7 @@ import { WhatsAppButton } from '@/components/ui/whatsapp-button';
 import { cn } from '@/lib/utils';
 import { MultiStepModal } from '@/components/ui/multi-step-modal';
 import { RedirectBlock } from '@/components/blocks/RedirectBlock';
+import { TemplateProps } from '@/types/templates';
 
 const PLATFORM_ICONS = {
   INSTAGRAM: Instagram,
@@ -41,57 +42,7 @@ const VerifiedBadge = () => (
   </svg>
 );
 
-interface ClassicTemplateProps {
-  page: {
-    id: string;
-    title: string;
-    subtitle: string | null;
-    avatarUrl: string | null;
-    primaryColor: string;
-    blocks: Array<{
-      id: string;
-      type: 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP' | 'MULTI_STEP' | 'REDIRECT';
-      content: {
-        title?: string;
-        label?: string;
-        url?: string;
-        pipelineId?: string;
-        isModal?: boolean;
-        modalTitle?: string;
-        successPage?: string;
-        address?: string;
-        city?: string;
-        state?: string;
-        zipCode?: string;
-        country?: string;
-        buttonTitle?: string;
-        greeting?: string;
-        whatsappNumber?: string;
-        showNavigationButton?: boolean;
-        navigationButtonLabel?: string;
-        navigationButtonOrigin?: string;
-        hasButton?: boolean;
-        buttonLabel?: string;
-        buttonUrl?: string;
-      };
-      order: number;
-    }>;
-    socialLinks: Array<{
-      id: string;
-      platform: keyof typeof PLATFORM_ICONS;
-      url: string;
-    }>;
-    user: {
-      id: string;
-      name: string;
-      image: string | null;
-      specialty: string | null;
-      phone?: string;
-    };
-  };
-}
-
-export default function ClassicTemplate({ page }: ClassicTemplateProps) {
+export default function ClassicTemplate({ page }: TemplateProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeFormBlock, setActiveFormBlock] = useState<typeof page.blocks[0] | null>(null);
   const [activeMultiStepBlock, setActiveMultiStepBlock] = useState<typeof page.blocks[0] | null>(null);
@@ -207,7 +158,7 @@ export default function ClassicTemplate({ page }: ClassicTemplateProps) {
             }
 
             if (block.type === 'FORM') {
-              if (block.content.isModal) {
+              if (block.content.showInModal) {
                 return (
                   <Button
                     key={block.id}

@@ -13,6 +13,8 @@ import { AiChatWidget } from '@/components/AiChatWidget';
 import { WhatsAppButton } from '@/components/ui/whatsapp-button';
 import { MultiStepModal } from '@/components/ui/multi-step-modal';
 import { RedirectBlock } from '@/components/blocks/RedirectBlock';
+import { toast } from 'sonner';
+import { TemplateProps } from '@/types/templates';
 
 const PLATFORM_ICONS = {
   INSTAGRAM: Instagram,
@@ -22,7 +24,7 @@ const PLATFORM_ICONS = {
   TWITTER: Twitter,
   WHATSAPP: MessageCircle,
   TIKTOK: MessageCircle,
-};
+} as const;
 
 const VerifiedBadge = () => (
   <svg
@@ -40,82 +42,35 @@ const VerifiedBadge = () => (
   </svg>
 );
 
-interface LightTemplateProps {
-  page: {
-    id: string;
-    title: string;
-    subtitle: string | null;
-    avatarUrl: string | null;
-    primaryColor: string;
-    blocks: Array<{
-      id: string;
-      type: 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP' | 'MULTI_STEP' | 'REDIRECT';
-      content: {
-        title?: string;
-        label?: string;
-        url?: string;
-        pipelineId?: string;
-        isModal?: boolean;
-        modalTitle?: string;
-        successPage?: string;
-        address?: string;
-        city?: string;
-        state?: string;
-        zipCode?: string;
-        country?: string;
-        buttonTitle?: string;
-        greeting?: string;
-        whatsappNumber?: string;
-      };
-      order: number;
-    }>;
-    socialLinks: Array<{
-      id: string;
-      platform: keyof typeof PLATFORM_ICONS;
-      url: string;
-    }>;
-    user: {
-      id: string;
-      name: string;
-      image: string | null;
-      specialty: string | null;
-      phone: string | null;
-    };
-  };
-}
-
-export default function LightTemplate({ page }: LightTemplateProps) {
+export default function LightTemplate({ page }: TemplateProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeFormBlock, setActiveFormBlock] = useState<typeof page.blocks[0] | null>(null);
   const [activeMultiStepBlock, setActiveMultiStepBlock] = useState<typeof page.blocks[0] | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, block: typeof page.blocks[0]) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-    
+  const handleSubmit = async (formData: any) => {
+    if (!formData.pipelineId) {
+      toast.error('Pipeline não configurado');
+      return;
+    }
+
     try {
-      const response = await fetch('/api/leads', {
+      const response = await fetch('/api/public/leads', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: formData.get('name'),
-          email: formData.get('email'),
-          phone: formData.get('phone'),
-          pipelineId: block.content.pipelineId,
-          status: 'Novo'
-        }),
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao enviar formulário');
+        const error = await response.json();
+        throw new Error(error.error || 'Erro ao enviar formulário');
       }
 
-      form.reset();
+      toast.success('Formulário enviado com sucesso!');
     } catch (error) {
       console.error('Erro ao enviar formulário:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao enviar formulário');
     }
   };
 
@@ -192,7 +147,7 @@ export default function LightTemplate({ page }: LightTemplateProps) {
               }
 
               if (block.type === 'FORM') {
-                if (block.content.isModal) {
+                if (block.content.showInModal) {
                   return (
                     <Button
                       key={block.id}
@@ -215,7 +170,17 @@ export default function LightTemplate({ page }: LightTemplateProps) {
                     <h2 className="text-2xl font-extralight mb-6 text-gray-900 tracking-wide">
                       {block.content.title}
                     </h2>
-                    <form onSubmit={(e) => handleSubmit(e, block)} className="space-y-6">
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      const formData = new FormData(e.currentTarget);
+                      handleSubmit({
+                        name: formData.get('name'),
+                        email: formData.get('email'),
+                        phone: formData.get('phone'),
+                        pipelineId: block.content.pipelineId,
+                        formId: block.content.formId
+                      });
+                    }} className="space-y-6">
                       <div>
                         <Label htmlFor="name" className="text-sm text-gray-600 font-light">Nome</Label>
                         <Input 
@@ -364,6 +329,9 @@ export default function LightTemplate({ page }: LightTemplateProps) {
           primaryColor="#111111"
           pipelineId={activeFormBlock.content.pipelineId}
           successPage={activeFormBlock.content.successPage}
+          formId={activeFormBlock.content.formId}
+          onSubmit={(data) => handleSubmit(data)}
+          theme="light"
         />
       )}
 

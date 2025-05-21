@@ -109,7 +109,7 @@ interface TemplatePageProps {
       label?: string;
       url?: string;
       pipelineId?: string;
-      isModal?: boolean;
+      showInModal?: boolean;
       modalTitle?: string;
       successPage?: string;
       address?: string;
@@ -123,6 +123,7 @@ interface TemplatePageProps {
       hasButton?: boolean;
       buttonLabel?: string;
       buttonUrl?: string;
+      formId?: string;
     };
     order: number;
   }>;
@@ -155,7 +156,7 @@ function transformPageContent(page: any, templateType: string): any {
         label: block.content.label,
         url: block.content.url,
         pipelineId: block.content.pipelineId,
-        isModal: block.content.isModal,
+        showInModal: block.content.showInModal,
         modalTitle: block.content.modalTitle,
         successPage: block.content.successPage,
         address: block.content.address,
@@ -174,7 +175,8 @@ function transformPageContent(page: any, templateType: string): any {
         modalSize: block.content.modalSize,
         modalLayout: block.content.modalLayout,
         showIcons: block.content.showIcons,
-        showDescriptions: block.content.showDescriptions
+        showDescriptions: block.content.showDescriptions,
+        formId: block.content.formId
       },
       order: block.order
     })),

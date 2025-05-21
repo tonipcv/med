@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Instagram, Youtube, Facebook, Linkedin, Twitter, MessageCircle, MapPin } from 'lucide-react';
+import { BsPatchCheckFill } from 'react-icons/bs';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { FormModal } from '@/components/FormModal';
@@ -12,6 +13,7 @@ import { AiChatWidget } from '@/components/AiChatWidget';
 import { WhatsAppButton } from '@/components/ui/whatsapp-button';
 import { MultiStepModal } from '@/components/ui/multi-step-modal';
 import { RedirectBlock } from '@/components/blocks/RedirectBlock';
+import { TemplateProps } from '@/types/templates';
 
 const PLATFORM_ICONS = {
   INSTAGRAM: Instagram,
@@ -21,70 +23,26 @@ const PLATFORM_ICONS = {
   TWITTER: Twitter,
   WHATSAPP: MessageCircle,
   TIKTOK: MessageCircle,
-};
+} as const;
 
 // Componente de verificação 
 const VerifiedBadge = () => (
   <svg
-    width="16"
-    height="16"
-    viewBox="0 0 16 16"
+    width="22"
+    height="22"
+    viewBox="0 0 18 18"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <circle cx="8" cy="8" r="8" fill="#0095F6"/>
+    <circle cx="9" cy="9" r="9" fill="#0095F6"/>
     <path
-      d="M11.5 6.5a.75.75 0 0 0-1.036-.248l-2.464 1.65-.87-1.218a.75.75 0 0 0-1.225.873l1.3 1.82a.75.75 0 0 0 1.129.076l3.25-2.703a.75.75 0 0 0-.084-1.25z"
+      d="M13.093 6.436a.75.75 0 0 0-1.036-.248l-3.144 2.115-1.17-1.635a.75.75 0 0 0-1.222.873l1.75 2.444a.75.75 0 0 0 1.129.076l3.75-3.125a.75.75 0 0 0-.057-1.5z"
       fill="#fff"
     />
   </svg>
 );
 
-interface MinimalTemplateProps {
-  page: {
-    id: string;
-    title: string;
-    subtitle: string | null;
-    avatarUrl: string | null;
-    primaryColor: string;
-    blocks: Array<{
-      id: string;
-      type: 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP' | 'MULTI_STEP' | 'REDIRECT';
-      content: {
-        title?: string;
-        label?: string;
-        url?: string;
-        pipelineId?: string;
-        isModal?: boolean;
-        modalTitle?: string;
-        successPage?: string;
-        address?: string;
-        city?: string;
-        state?: string;
-        zipCode?: string;
-        country?: string;
-        buttonTitle?: string;
-        greeting?: string;
-        whatsappNumber?: string;
-      };
-      order: number;
-    }>;
-    socialLinks: Array<{
-      id: string;
-      platform: keyof typeof PLATFORM_ICONS;
-      url: string;
-    }>;
-    user: {
-      id: string;
-      name: string;
-      image: string | null;
-      specialty: string | null;
-      phone?: string;
-    };
-  };
-}
-
-export default function MinimalTemplate({ page }: MinimalTemplateProps) {
+export default function MinimalTemplate({ page }: TemplateProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeFormBlock, setActiveFormBlock] = useState<typeof page.blocks[0] | null>(null);
   const [activeMultiStepBlock, setActiveMultiStepBlock] = useState<typeof page.blocks[0] | null>(null);
@@ -196,7 +154,7 @@ export default function MinimalTemplate({ page }: MinimalTemplateProps) {
             }
 
             if (block.type === 'FORM') {
-              if (block.content.isModal) {
+              if (block.content.showInModal) {
                 return (
                   <Button
                     key={block.id}

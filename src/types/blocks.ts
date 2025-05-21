@@ -32,14 +32,17 @@ export interface Block {
       color?: string;
       isExternal?: boolean;
     }>;
-    modalSize?: 'default' | 'large';
+    modalSize?: 'default' | 'large' | 'full';
     modalLayout?: 'grid' | 'list';
-    showIcons?: boolean;
     showDescriptions?: boolean;
+    showIcons?: boolean;
     // Redirect specific properties
     redirectUrl?: string;
-    redirectDelay?: number; // delay in seconds
+    redirectDelay?: number;
     showCountdown?: boolean;
+    // Form specific properties
+    formId?: string;
+    showInModal?: boolean;
   };
   order: number;
 }

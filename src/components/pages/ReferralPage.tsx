@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,8 +12,7 @@ import MinimalTemplate from './templates/MinimalTemplate';
 import ClassicTemplate from './templates/ClassicTemplate';
 import CollorTemplate from './templates/CollorTemplate';
 import LightTemplate from './templates/LightTemplate';
-
-type SocialPlatform = 'INSTAGRAM' | 'WHATSAPP' | 'YOUTUBE' | 'FACEBOOK' | 'LINKEDIN' | 'TIKTOK' | 'TWITTER';
+import { BlockType, BlockContent, TemplateProps, PLATFORM_ICONS } from '@/types/templates';
 
 interface ReferralPageProps {
   referral: {
@@ -28,13 +27,13 @@ interface ReferralPageProps {
       layout: string;
       blocks: Array<{
         id: string;
-        type: string;
-        content: any;
+        type: BlockType;
+        content: BlockContent;
         order: number;
       }>;
       socialLinks: Array<{
         id: string;
-        platform: string;
+        platform: keyof typeof PLATFORM_ICONS;
         url: string;
       }>;
       user: {
@@ -52,94 +51,13 @@ interface ReferralPageProps {
       name: string;
       image: string | null;
       specialty?: string;
+      phone: string | null;
     };
   };
 }
 
-interface PageContent {
-  id: string;
-  title: string;
-  subtitle: string | null;
-  avatarUrl: string | null;
-  primaryColor: string;
-  blocks: Array<{
-    id: string;
-    type: 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP';
-    content: any;
-    order: number;
-  }>;
-  socialLinks: Array<{
-    id: string;
-    platform: 'INSTAGRAM' | 'WHATSAPP' | 'YOUTUBE' | 'FACEBOOK' | 'LINKEDIN' | 'TWITTER';
-    url: string;
-  }>;
-  user: {
-    id: string;
-    name: string;
-    image: string | null;
-    specialty: string | null;
-    phone: string | null;
-  };
-}
-
 const ReferralPage: React.FC<ReferralPageProps> = ({ referral }) => {
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-
-    try {
-      const response = await fetch('/api/leads', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          phone,
-          email,
-          referralId: referral.id,
-        }),
-      });
-
-      if (response.ok) {
-        setSuccess(true);
-        setName('');
-        setPhone('');
-        setEmail('');
-        toast({
-          title: "Sucesso",
-          description: "Seus dados foram enviados com sucesso!",
-        });
-      } else {
-        const data = await response.json();
-        setError(data.error || 'Ocorreu um erro ao enviar seus dados.');
-        toast({
-          title: "Erro",
-          description: data.error || 'Ocorreu um erro ao enviar seus dados.',
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      setError('Ocorreu um erro ao enviar seus dados. Tente novamente.');
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao enviar seus dados. Tente novamente.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const pageContent: PageContent = {
+  const pageContent: TemplateProps['page'] = {
     id: referral.page.id,
     title: referral.page.title,
     subtitle: referral.page.subtitle || null,
@@ -147,11 +65,11 @@ const ReferralPage: React.FC<ReferralPageProps> = ({ referral }) => {
     primaryColor: referral.page.primaryColor,
     blocks: referral.page.blocks.sort((a, b) => a.order - b.order).map(block => ({
       ...block,
-      type: block.type as 'BUTTON' | 'FORM' | 'ADDRESS' | 'AI_CHAT' | 'WHATSAPP'
+      type: block.type
     })),
     socialLinks: referral.page.socialLinks.map(link => ({
       id: link.id,
-      platform: link.platform as 'INSTAGRAM' | 'WHATSAPP' | 'YOUTUBE' | 'FACEBOOK' | 'LINKEDIN' | 'TWITTER',
+      platform: link.platform,
       url: link.url
     })),
     user: {
@@ -159,7 +77,7 @@ const ReferralPage: React.FC<ReferralPageProps> = ({ referral }) => {
       name: referral.user.name,
       image: referral.user.image,
       specialty: referral.user.specialty || null,
-      phone: referral.user.phone || null
+      phone: referral.user.phone
     },
   };
 

@@ -62,8 +62,15 @@ export async function PUT(
       const createQueries = blocks.map((block: any) =>
         prisma.pageBlock.create({
           data: {
+            id: block.id, // Preserve the block ID
             type: block.type,
-            content: block.content,
+            content: {
+              ...block.content,
+              formId: block.content.formId || null,
+              title: block.content.title || null,
+              modalTitle: block.content.modalTitle || null,
+              showInModal: block.content.showInModal === undefined ? false : block.content.showInModal
+            },
             order: block.order,
             pageId: params.pageId,
           },

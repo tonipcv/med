@@ -21,19 +21,19 @@ export function MultiStepModal({ isOpen, onClose, block }: MultiStepModalProps) 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={cn(
-        "sm:max-w-[95vw] max-h-[95vh] overflow-y-auto",
-        modalSize === 'large' ? "md:max-w-[1000px]" : "md:max-w-[800px]",
+        "sm:max-w-[600px] max-h-[85vh] overflow-y-auto p-0 bg-white border border-gray-100 shadow-lg",
+        modalSize === 'large' ? "md:max-w-[800px]" : "md:max-w-[600px]",
       )}>
         {/* Progress Bar */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gray-100 rounded-t-lg overflow-hidden">
           <div 
-            className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300"
+            className="h-full bg-gradient-to-r from-gray-200 to-gray-300 transition-all duration-300"
             style={{ width: '50%' }}
           />
         </div>
 
-        <div className="flex items-center justify-between mb-6 mt-4">
-          <h2 className="text-xl font-light tracking-tight text-gray-900">
+        <div className="flex items-center justify-between mb-4 mt-4 px-4">
+          <h2 className="text-lg font-medium tracking-tight text-gray-900">
             {block.content.modalTitle || block.content.label}
           </h2>
           <Button
@@ -42,12 +42,12 @@ export function MultiStepModal({ isOpen, onClose, block }: MultiStepModalProps) 
             onClick={onClose}
             className="rounded-full hover:bg-gray-100"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4 text-gray-500" />
           </Button>
         </div>
 
         <div className={cn(
-          "grid gap-4",
+          "grid gap-3 px-4 pb-4",
           isGridLayout ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"
         )}>
           {block.content.subButtons?.map((subButton) => (
@@ -55,10 +55,10 @@ export function MultiStepModal({ isOpen, onClose, block }: MultiStepModalProps) 
               key={subButton.id}
               asChild
               className={cn(
-                "w-full p-4 h-auto text-center flex flex-col items-center justify-center gap-4",
-                "bg-gray-900 hover:bg-gray-800 text-white",
-                "shadow-lg hover:shadow-xl transition-all duration-300",
-                "rounded-xl overflow-hidden border border-gray-700",
+                "w-full p-3 h-auto text-center flex flex-col items-center justify-center gap-3",
+                "bg-gray-50 hover:bg-gray-100 text-gray-900",
+                "shadow-sm hover:shadow transition-all duration-300",
+                "rounded-xl overflow-hidden border border-gray-200",
                 subButton.color && `hover:border-${subButton.color}-500`
               )}
             >
@@ -68,27 +68,27 @@ export function MultiStepModal({ isOpen, onClose, block }: MultiStepModalProps) 
                 rel={subButton.isExternal ? "noopener noreferrer" : undefined}
                 className="flex-1 flex flex-col items-center justify-center w-full"
               >
-                <div className="flex flex-col items-center gap-4 w-full">
+                <div className="flex flex-col items-center gap-3 w-full">
                   {showIcons && subButton.icon && (
                     <div className={cn(
-                      "flex-shrink-0 p-3 rounded-lg",
-                      subButton.color ? `bg-${subButton.color}-900 text-${subButton.color}-200` : "bg-gray-800 text-gray-200"
+                      "flex-shrink-0 p-2 rounded-lg",
+                      subButton.color ? `bg-${subButton.color}-50 text-${subButton.color}-600` : "bg-gray-100 text-gray-600"
                     )}>
-                      <span className="text-2xl">{subButton.icon}</span>
+                      <span className="text-xl">{subButton.icon}</span>
                     </div>
                   )}
                   <div className="flex-1 text-center w-full">
-                    <h3 className="text-lg font-medium text-white mb-2">
+                    <h3 className="text-base font-medium text-gray-900 mb-1">
                       {subButton.label}
                     </h3>
                     {showDescriptions && subButton.description && (
-                      <p className="text-sm text-gray-300 line-clamp-2">
+                      <p className="text-sm text-gray-500 line-clamp-2">
                         {subButton.description}
                       </p>
                     )}
                   </div>
                   {subButton.isExternal && (
-                    <ArrowUpRight className="h-5 w-5 text-gray-400 mt-2" />
+                    <ArrowUpRight className="h-4 w-4 text-gray-400 mt-1" />
                   )}
                 </div>
               </a>

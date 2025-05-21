@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FormBlock } from '@/components/blocks/FormBlock';
+import { Form } from '@/types/forms';
 
 interface FormModalProps {
   isOpen: boolean;
@@ -16,19 +16,53 @@ interface FormModalProps {
   primaryColor: string;
   pipelineId?: string;
   successPage?: string;
+  formId?: string;
+  onSubmit?: (data: any) => Promise<void>;
+  theme?: 'light' | 'dark';
 }
 
-export function FormModal({ isOpen, onClose, title, primaryColor, pipelineId, successPage }: FormModalProps) {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: ''
-  });
+export function FormModal({ 
+  isOpen, 
+  onClose, 
+  title, 
+  primaryColor, 
+  pipelineId, 
+  successPage,
+  formId,
+  onSubmit,
+  theme = 'dark'
+}: FormModalProps) {
+  const [form, setForm] = useState<Form | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  useEffect(() => {
+    const fetchForm = async () => {
+      if (!formId) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/forms/${formId}`);
+        if (!response.ok) throw new Error('Failed to load form');
+        const data = await response.json();
+        setForm(data);
+      } catch (error) {
+        console.error('Error loading form:', error);
+        toast.error('Erro ao carregar formulário');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isOpen) {
+      setIsLoading(true);
+      fetchForm();
+    }
+  }, [formId, isOpen]);
+
+  const handleSubmit = async (formData: any) => {
     if (!pipelineId) {
       toast.error('Pipeline não configurado');
       return;
@@ -37,30 +71,34 @@ export function FormModal({ isOpen, onClose, title, primaryColor, pipelineId, su
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('/api/public/leads', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      if (onSubmit) {
+        await onSubmit({
           ...formData,
-          pipelineId
-        }),
-      });
+          pipelineId,
+          formId
+        });
+      } else {
+        const response = await fetch('/api/public/leads', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...formData,
+            pipelineId,
+            formId
+          }),
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Erro ao enviar formulário');
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Erro ao enviar formulário');
+        }
       }
 
-      // Limpa o formulário e fecha o modal
-      setFormData({ name: '', email: '', phone: '' });
       onClose();
-
-      // Mostra mensagem de sucesso
       toast.success('Formulário enviado com sucesso!');
 
-      // Redireciona para a página de sucesso se especificada
       if (successPage) {
         window.location.href = successPage;
       }
@@ -74,77 +112,54 @@ export function FormModal({ isOpen, onClose, title, primaryColor, pipelineId, su
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] p-0 bg-white text-gray-900 border border-gray-100 shadow-lg">
-        <DialogHeader className="p-6 pb-0">
-          <DialogTitle className="text-2xl font-medium tracking-tight text-gray-900">
+      <DialogContent className={cn(
+        "sm:max-w-[600px] p-6",
+        theme === 'light' 
+          ? "bg-white border-gray-200 text-gray-900" 
+          : "bg-zinc-900 border-zinc-800 text-white"
+      )}>
+        <DialogHeader>
+          <DialogTitle className={cn(
+            "text-xl font-light tracking-tight",
+            theme === 'light' 
+              ? "text-gray-900" 
+              : "text-white"
+          )}>
             {title}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="modal-name" className="text-sm font-medium text-gray-700">
-                Nome
-              </Label>
-              <Input 
-                id="modal-name" 
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Seu nome completo"
-                className="mt-1.5 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-gray-300 focus:ring-gray-200"
-                required
-                disabled={isSubmitting}
-              />
-            </div>
-            <div>
-              <Label htmlFor="modal-email" className="text-sm font-medium text-gray-700">
-                Email
-              </Label>
-              <Input 
-                id="modal-email" 
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="seu@email.com"
-                className="mt-1.5 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-gray-300 focus:ring-gray-200"
-                required
-                disabled={isSubmitting}
-              />
-            </div>
-            <div>
-              <Label htmlFor="modal-phone" className="text-sm font-medium text-gray-700">
-                WhatsApp
-              </Label>
-              <Input 
-                id="modal-phone" 
-                value={formData.phone}
-                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                placeholder="(00) 00000-0000"
-                className="mt-1.5 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-gray-300 focus:ring-gray-200"
-                required
-                disabled={isSubmitting}
-              />
-            </div>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center p-8">
+            <Loader2 className={cn(
+              "h-8 w-8 animate-spin",
+              theme === 'light' ? "text-gray-400" : "text-zinc-400"
+            )} />
           </div>
-          <Button 
-            type="submit"
-            className={cn(
-              "w-full py-6 text-base font-normal tracking-wide text-white transition-all duration-300 mt-6",
-              "hover:opacity-90"
-            )}
-            style={{ backgroundColor: primaryColor }}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Enviando...
-              </>
-            ) : (
-              'Enviar'
-            )}
-          </Button>
-        </form>
+        ) : form ? (
+          <FormBlock
+            block={{
+              id: formId || '',
+              type: 'FORM',
+              content: {
+                formId: formId,
+                showInModal: false,
+                pipelineId: pipelineId,
+                title: title,
+                modalTitle: title
+              },
+              order: 0
+            }}
+            theme={theme}
+          />
+        ) : (
+          <div className={cn(
+            "text-center py-8",
+            theme === 'light' ? "text-gray-500" : "text-zinc-400"
+          )}>
+            Formulário não encontrado
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

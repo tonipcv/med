@@ -12,6 +12,7 @@ import {
   HeartIcon,
   SparklesIcon,
   ShoppingBagIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -47,7 +48,10 @@ export default function Navigation() {
     '/dashboard/services',
     '/dashboard/pacientes',
     '/profile',
-    '/links'
+    '/links',
+    '/forms',
+    '/forms/',
+    '/forms/[formId]'
   ];
 
   // Só mostrar navegação em rotas protegidas
@@ -83,6 +87,12 @@ export default function Navigation() {
           label: 'Páginas',
           icon: LinkIcon,
           description: 'Páginas de links'
+        },
+        {
+          href: '/forms',
+          label: 'Formulários',
+          icon: DocumentTextIcon,
+          description: 'Formulários públicos'
         },
         {
           href: '/dashboard/leads',
