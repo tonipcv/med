@@ -19,15 +19,7 @@ export async function GET(request: Request) {
         email: true,
         phone: true,
         hasActiveProducts: true,
-        hasPortalAccess: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            specialty: true,
-            image: true
-          }
-        }
+        hasPortalAccess: true
       }
     })
 
@@ -41,13 +33,7 @@ export async function GET(request: Request) {
       email: patient.email,
       phone: patient.phone,
       hasActiveProducts: patient.hasActiveProducts,
-      hasPortalAccess: patient.hasPortalAccess,
-      doctor: patient.user ? {
-        id: patient.user.id,
-        name: patient.user.name,
-        specialty: patient.user.specialty,
-        image: patient.user.image
-      } : null
+      hasPortalAccess: patient.hasPortalAccess
     })
   } catch (error) {
     console.error('Erro ao buscar perfil do paciente:', error)

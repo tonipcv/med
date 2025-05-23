@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import { validateToken } from "../../middleware";
 import { getToken } from "next-auth/jwt";
 import { headers } from "next/headers";
+import { nanoid } from "nanoid";
 
 const prisma = new PrismaClient();
 
@@ -126,7 +127,6 @@ export async function POST(req: NextRequest) {
         where: { id: existingLead.id },
         data: {
           name,
-          interest: interest || null,
           indicationId: indicationId || null,
           status: status || existingLead.status,
           potentialValue: potentialValue ? parseFloat(potentialValue) : null,
@@ -144,9 +144,9 @@ export async function POST(req: NextRequest) {
       // Create new lead
       lead = await prisma.leads.create({
         data: {
+          id: nanoid(),
           name,
           phone,
-          interest: interest || null,
           user_id: token.sub,
           indicationId: indicationId || null,
           status: status || "Novo",
@@ -157,7 +157,8 @@ export async function POST(req: NextRequest) {
           utmMedium: utmMedium || null,
           utmCampaign: utmCampaign || null,
           utmTerm: utmTerm || null,
-          utmContent: utmContent || null
+          utmContent: utmContent || null,
+          updatedAt: new Date()
         }
       });
     }

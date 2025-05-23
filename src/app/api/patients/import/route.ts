@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { nanoid } from "nanoid";
 
 export async function POST(req: Request) {
   try {
@@ -20,26 +21,30 @@ export async function POST(req: Request) {
       patients.map(async (patient) => {
         try {
           // First create the lead
-          const lead = await prisma.lead.create({
+          const lead = await prisma.leads.create({
             data: {
+              id: nanoid(),
               name: patient.name,
               phone: patient.phone,
               email: patient.email || null,
               status: patient.lead?.status || "novo",
               medicalNotes: patient.lead?.medicalNotes || null,
-              userId: session.user.id
+              user_id: session.user.id,
+              updatedAt: new Date()
             }
           });
 
           // Then create the patient connected to the lead
           const newPatient = await prisma.patient.create({
             data: {
+              id: nanoid(),
               name: patient.name,
               email: patient.email,
               phone: patient.phone,
               userId: session.user.id,
               leadId: lead.id,
-              hasPortalAccess: false
+              hasPortalAccess: false,
+              updatedAt: new Date()
             }
           });
 

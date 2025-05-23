@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { nanoid } from 'nanoid';
 
 // POST - Adicionar um novo endereço
 export async function POST(
@@ -9,60 +10,41 @@ export async function POST(
   { params }: { params: { pageId: string } }
 ) {
   try {
-    // Verificar autenticação
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { name, address, isDefault } = await request.json();
 
-    // Verificar se a página existe e pertence ao usuário
-    const page = await prisma.page.findFirst({
-      where: {
-        id: params.pageId,
-        userId: session.user.id,
-      },
-    });
-
-    if (!page) {
-      return NextResponse.json({ error: 'Page not found' }, { status: 404 });
-    }
-
-    // Obter dados do corpo da requisição
-    const body = await request.json();
-    const { name, address, isDefault } = body;
-
+    // Validar campos obrigatórios
     if (!name || !address) {
-      return NextResponse.json({ error: 'Name and address are required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Name and address are required' },
+        { status: 400 }
+      );
     }
 
-    // Se o novo endereço for padrão, remover o status de padrão dos outros
+    // Se este endereço for definido como padrão, remover o padrão dos outros
     if (isDefault) {
       await prisma.pageAddress.updateMany({
-        where: {
-          pageId: params.pageId,
-          isDefault: true,
-        },
-        data: {
-          isDefault: false,
-        },
+        where: { pageId: params.pageId },
+        data: { isDefault: false }
       });
     }
 
     // Criar o novo endereço
     const newAddress = await prisma.pageAddress.create({
       data: {
+        id: nanoid(),
         pageId: params.pageId,
         name,
         address,
-        isDefault: isDefault ?? false,
-      },
+        isDefault: isDefault || false,
+        updatedAt: new Date()
+      }
     });
 
     return NextResponse.json(newAddress);
   } catch (error) {
     console.error('Error creating address:', error);
     return NextResponse.json(
-      { error: 'Failed to create address' },
+      { error: 'Error creating address' },
       { status: 500 }
     );
   }
@@ -74,32 +56,18 @@ export async function GET(
   { params }: { params: { pageId: string } }
 ) {
   try {
-    // Verificar autenticação
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Verificar se a página existe e pertence ao usuário
-    const page = await prisma.page.findFirst({
+    // Buscar endereços da página
+    const pageAddresses = await prisma.pageAddress.findMany({
       where: {
-        id: params.pageId,
-        userId: session.user.id,
-      },
-      include: {
-        addresses: true,
-      },
+        pageId: params.pageId
+      }
     });
 
-    if (!page) {
-      return NextResponse.json({ error: 'Page not found' }, { status: 404 });
-    }
-
-    return NextResponse.json(page.addresses);
+    return NextResponse.json(pageAddresses);
   } catch (error) {
     console.error('Error fetching addresses:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch addresses' },
+      { error: 'Error fetching addresses' },
       { status: 500 }
     );
   }
@@ -111,78 +79,76 @@ export async function PUT(
   { params }: { params: { pageId: string } }
 ) {
   try {
-    // Verificar autenticação
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { addressList } = await request.json();
 
-    // Verificar se a página existe e pertence ao usuário
-    const page = await prisma.page.findFirst({
-      where: {
-        id: params.pageId,
-        userId: session.user.id,
-      },
-    });
-
-    if (!page) {
-      return NextResponse.json({ error: 'Page not found' }, { status: 404 });
-    }
-
-    // Obter lista de endereços do corpo da requisição
-    const body = await request.json();
-    const { addresses } = body;
-
-    if (!Array.isArray(addresses)) {
-      return NextResponse.json({ error: 'Addresses must be an array' }, { status: 400 });
+    if (!Array.isArray(addressList)) {
+      return NextResponse.json(
+        { error: 'Addresses must be an array' },
+        { status: 400 }
+      );
     }
 
     // Validar que cada endereço tem os campos obrigatórios
-    for (const addr of addresses) {
+    for (const addr of addressList) {
       if (!addr.name || !addr.address) {
-        return NextResponse.json({ 
-          error: 'Each address must have name and address fields' 
-        }, { status: 400 });
+        return NextResponse.json(
+          { error: 'Each address must have name and address fields' },
+          { status: 400 }
+        );
       }
     }
 
     // Verificar que há pelo menos um endereço padrão se houver endereços
-    let updatedAddresses = [...addresses];
-    if (updatedAddresses.length > 0 && !updatedAddresses.some(addr => addr.isDefault)) {
-      // Se não houver um endereço padrão, defina o primeiro como padrão
-      updatedAddresses[0].isDefault = true;
+    let updatedAddressList = [...addressList];
+    if (updatedAddressList.length > 0 && !updatedAddressList.some(addr => addr.isDefault)) {
+      updatedAddressList[0].isDefault = true;
     }
 
-    // Buscar endereços atuais
-    const currentAddresses = await prisma.$queryRaw`
-      SELECT * FROM "PageAddress" WHERE "pageId" = ${params.pageId}
-    `;
-    
     // Excluir endereços atuais
-    await prisma.$executeRaw`
-      DELETE FROM "PageAddress" WHERE "pageId" = ${params.pageId}
-    `;
-    
+    await prisma.pageAddress.deleteMany({
+      where: { pageId: params.pageId }
+    });
+
     // Criar novos endereços
-    for (const addr of updatedAddresses) {
-      await prisma.$executeRaw`
-        INSERT INTO "PageAddress" 
-        ("id", "pageId", "name", "address", "isDefault", "createdAt", "updatedAt")
-        VALUES 
-        (gen_random_uuid(), ${params.pageId}, ${addr.name}, ${addr.address}, ${addr.isDefault}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-      `;
-    }
-    
-    // Buscar endereços atualizados
-    const newAddresses = await prisma.$queryRaw`
-      SELECT * FROM "PageAddress" WHERE "pageId" = ${params.pageId}
-    `;
-    
+    const newAddresses = await Promise.all(
+      updatedAddressList.map(addr =>
+        prisma.pageAddress.create({
+          data: {
+            id: nanoid(),
+            pageId: params.pageId,
+            name: addr.name,
+            address: addr.address,
+            isDefault: addr.isDefault || false,
+            updatedAt: new Date()
+          }
+        })
+      )
+    );
+
     return NextResponse.json(newAddresses);
   } catch (error) {
     console.error('Error updating addresses:', error);
     return NextResponse.json(
-      { error: 'Failed to update addresses', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Error updating addresses' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: { pageId: string } }
+) {
+  try {
+    await prisma.pageAddress.deleteMany({
+      where: { pageId: params.pageId }
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting addresses:', error);
+    return NextResponse.json(
+      { error: 'Error deleting addresses' },
       { status: 500 }
     );
   }

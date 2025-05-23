@@ -16,15 +16,7 @@ export async function POST(request: Request) {
 
     // Buscar paciente pelo email
     const patient = await prisma.patient.findFirst({
-      where: { email },
-      include: {
-        user: {
-          select: {
-            name: true,
-            slug: true
-          }
-        }
-      }
+      where: { email }
     });
 
     if (!patient) {
@@ -32,6 +24,18 @@ export async function POST(request: Request) {
         { error: 'E-mail não encontrado no sistema. Por favor, verifique o e-mail informado ou entre em contato com seu médico.' },
         { status: 404 }
       );
+    }
+
+    // Buscar dados do médico se houver userId
+    let doctorName = 'Médico';
+    if (patient.userId) {
+      const doctor = await prisma.user.findUnique({
+        where: { id: patient.userId },
+        select: { name: true }
+      });
+      if (doctor) {
+        doctorName = doctor.name;
+      }
     }
 
     // Gerar token de acesso
@@ -42,7 +46,8 @@ export async function POST(request: Request) {
       where: { id: patient.id },
       data: {
         accessToken: hashedToken,
-        accessTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 horas
+        accessTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 horas
+        updatedAt: new Date()
       }
     });
 
@@ -54,7 +59,7 @@ export async function POST(request: Request) {
       await sendPatientConfirmationEmail({
         to: patient.email,
         patientName: patient.name,
-        doctorName: patient.user?.name || 'Médico',
+        doctorName: doctorName,
         accessLink
       });
     } catch (error) {

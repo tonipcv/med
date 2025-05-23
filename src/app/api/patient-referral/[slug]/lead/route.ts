@@ -43,13 +43,13 @@ export async function POST(
     // Criar lead e atualizar contadores em uma transação
     const result = await prisma.$transaction(async (tx) => {
       // Criar lead
-      const lead = await tx.lead.create({
+      const lead = await tx.leads.create({
         data: {
           id: nanoid(),
           name,
           phone,
           email,
-          userId: referral.page.userId,
+          user_id: referral.page.userId,
           source: 'referral',
           status: 'Novo'
         }

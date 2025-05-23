@@ -70,9 +70,11 @@ export async function POST(req: NextRequest) {
     // Criar referência
     const referral = await prisma.patientReferral.create({
       data: {
+        id: nanoid(),
         slug: nanoid(10),
         pageId,
         patientId,
+        updatedAt: new Date()
       }
     });
 

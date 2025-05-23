@@ -36,22 +36,7 @@ export async function GET(request: Request) {
             id: true,
             slug: true,
             leads: true,
-            sales: true,
-            page: {
-              select: {
-                id: true,
-                title: true,
-                slug: true
-              }
-            }
-          }
-        },
-        page: {
-          select: {
-            id: true,
-            title: true,
-            slug: true,
-            primaryColor: true
+            sales: true
           }
         }
       }
@@ -73,10 +58,8 @@ export async function GET(request: Request) {
         : (reward.referral.sales / reward.unlockValue) * 100,
       referral: {
         id: reward.referral.id,
-        slug: reward.referral.slug,
-        page: reward.referral.page
-      },
-      page: reward.page
+        slug: reward.referral.slug
+      }
     }))
 
     return NextResponse.json(formattedRewards)

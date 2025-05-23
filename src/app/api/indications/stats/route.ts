@@ -124,10 +124,10 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    const dailyLeads = await prisma.lead.groupBy({
+    const dailyLeads = await prisma.leads.groupBy({
       by: ['createdAt'],
       where: {
-        userId: session.user.id,
+        user_id: session.user.id,
         createdAt: { gte: thirtyDaysAgo }
       },
       _count: {

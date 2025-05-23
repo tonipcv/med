@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { nanoid } from 'nanoid';
 
 // Código de teste para API simplificada
 const mockData = [
@@ -41,15 +42,18 @@ export async function POST(request: Request) {
       console.log('💾 Tentando salvar lead no banco de dados...');
       const lead = await prisma.insideSalesLead.create({
         data: {
-          name,
-          email,
-          whatsapp,
-          instagram,
-          area,
-          employees,
-          revenue,
-          useTechnology
-        },
+          id: nanoid(),
+          name: name || '',
+          email: email || '',
+          whatsapp: whatsapp || '',
+          instagram: instagram || null,
+          area: area || '',
+          employees: employees || '',
+          revenue: revenue || '',
+          useTechnology: useTechnology || '',
+          status: 'new',
+          updatedAt: new Date()
+        }
       });
       console.log('✅ Lead salvo com sucesso:', lead);
 

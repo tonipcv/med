@@ -49,12 +49,6 @@ export async function GET(req: NextRequest) {
             unlockValue: true,
             unlockType: true,
             unlockedAt: true,
-            page: {
-              select: {
-                title: true,
-                slug: true
-              }
-            },
             textContent: true
           }
         }

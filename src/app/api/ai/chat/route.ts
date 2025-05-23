@@ -32,20 +32,17 @@ export async function POST(request: Request) {
       select: {
         name: true,
         specialty: true,
-        patients: {
-          include: {
-            lead: true
-          },
-          orderBy: {
-            createdAt: 'desc'
-          },
-          take: 10 // Últimos 10 pacientes
-        },
         leads: {
           orderBy: {
             createdAt: 'desc'
           },
-          take: 10 // Últimos 10 leads
+          take: 10,
+          select: {
+            name: true,
+            status: true,
+            appointmentDate: true,
+            medicalNotes: true
+          }
         }
       }
     });
@@ -63,16 +60,11 @@ export async function POST(request: Request) {
         name: userData.name,
         specialty: userData.specialty,
       },
-      recentPatients: userData.patients.map(p => ({
-        name: p.name,
-        status: p.lead?.status,
-        appointmentDate: p.lead?.appointmentDate,
-        medicalNotes: p.lead?.medicalNotes,
-      })),
-      recentLeads: userData.leads.map(l => ({
-        status: l.status,
-        appointmentDate: l.appointmentDate,
-        createdAt: l.createdAt,
+      recentLeads: userData.leads.map(lead => ({
+        name: lead.name,
+        status: lead.status,
+        appointmentDate: lead.appointmentDate,
+        medicalNotes: lead.medicalNotes
       }))
     };
 
@@ -81,8 +73,7 @@ export async function POST(request: Request) {
 Você é um assistente médico AI especializado em análise de dados de pacientes e leads.
 Contexto atual:
 - Médico: ${context.doctor.name} (${context.doctor.specialty})
-- Últimos pacientes: ${JSON.stringify(context.recentPatients, null, 2)}
-- Últimos leads: ${JSON.stringify(context.recentLeads, null, 2)}
+- Últimos leads/pacientes: ${JSON.stringify(context.recentLeads, null, 2)}
 
 Pergunta do médico: ${message}
 

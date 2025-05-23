@@ -18,13 +18,13 @@ export default function ServiceList({ initialServices }: ServiceListProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ isActive: !currentStatus }),
+        body: JSON.stringify({ is_active: !currentStatus }),
       });
 
       if (response.ok) {
         setServices(services.map(service => 
           service.id === serviceId 
-            ? { ...service, isActive: !currentStatus }
+            ? { ...service, is_active: !currentStatus }
             : service
         ));
       }
@@ -73,20 +73,20 @@ export default function ServiceList({ initialServices }: ServiceListProps) {
               <td className="px-6 py-4 whitespace-nowrap">
                 <span
                   className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    service.isActive
+                    service.is_active
                       ? 'bg-green-100 text-green-800'
                       : 'bg-red-100 text-red-800'
                   }`}
                 >
-                  {service.isActive ? 'Ativo' : 'Inativo'}
+                  {service.is_active ? 'Ativo' : 'Inativo'}
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <button
-                  onClick={() => handleToggleActive(service.id, service.isActive)}
+                  onClick={() => handleToggleActive(service.id, service.is_active)}
                   className="text-blue-600 hover:text-blue-900 mr-4"
                 >
-                  {service.isActive ? 'Desativar' : 'Ativar'}
+                  {service.is_active ? 'Desativar' : 'Ativar'}
                 </button>
                 <a
                   href={`/dashboard/services/${service.id}/edit`}

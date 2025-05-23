@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { hash } from 'bcryptjs';
 import { signIn } from 'next-auth/react';
+import { nanoid } from 'nanoid';
 
 export const runtime = 'nodejs';
 
@@ -47,11 +48,13 @@ export async function POST(request: Request) {
     // Criar o paciente
     const patient = await prisma.patient.create({
       data: {
+        id: nanoid(),
         name,
         email,
         phone,
         hasPassword: true,
-        password: hashedPassword
+        password: hashedPassword,
+        updatedAt: new Date()
       }
     });
 

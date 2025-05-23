@@ -178,13 +178,14 @@ export async function POST(req: NextRequest) {
     // Cria a indicação
     const indication = await prisma.indication.create({
       data: {
+        id: nanoid(),
         slug,
         userId: token.sub as string,
         patientId,
-        name: indicationName,
+        name: name || patientName || `Indicação ${slug.substring(0, 5)}`,
         type: type || 'regular',
-        fullLink: `${process.env.NEXT_PUBLIC_APP_URL}/${slug}`,
-      },
+        fullLink: `${process.env.NEXT_PUBLIC_APP_URL}/i/${slug}`
+      }
     });
 
     // Registra o evento de criação da indicação

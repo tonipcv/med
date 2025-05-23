@@ -34,16 +34,7 @@ export async function GET(
         firstAccess: true,
         welcomeEmailSent: true,
         resetToken: true,
-        resetTokenExpiry: true,
-        user: {
-          select: {
-            name: true,
-            specialty: true,
-            phone: true,
-            image: true,
-            slug: true
-          }
-        }
+        resetTokenExpiry: true
       }
     });
 
@@ -64,15 +55,7 @@ export async function GET(
         hasPassword: patient.hasPassword,
         hasPortalAccess: patient.hasPortalAccess,
         firstAccess: patient.firstAccess,
-        welcomeEmailSent: patient.welcomeEmailSent,
-        doctorName: patient.user?.name,
-        user: {
-          name: patient.user?.name || 'Médico',
-          specialty: patient.user?.specialty || 'Especialidade não informada',
-          phone: patient.user?.phone || '',
-          image: patient.user?.image || null,
-          slug: patient.user?.slug || patient.id
-        }
+        welcomeEmailSent: patient.welcomeEmailSent
       });
     }
 
@@ -109,15 +92,7 @@ export async function GET(
       hasPortalAccess: true,
       firstAccess: false,
       welcomeEmailSent: patient.welcomeEmailSent,
-      doctorName: patient.user?.name,
-      accessToken,
-      user: {
-        name: patient.user?.name || 'Médico',
-        specialty: patient.user?.specialty || 'Especialidade não informada',
-        phone: patient.user?.phone || '',
-        image: patient.user?.image || null,
-        slug: patient.user?.slug || patient.id
-      }
+      accessToken
     });
 
   } catch (error) {

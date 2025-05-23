@@ -21,16 +21,7 @@ export async function GET(
       where: {
         id: params.id,
         userId: session.user.id,
-      },
-      include: {
-        lead: {
-          select: {
-            status: true,
-            appointmentDate: true,
-            medicalNotes: true,
-          }
-        }
-      },
+      }
     });
 
     if (!patient) {
@@ -81,31 +72,15 @@ export async function PUT(
       );
     }
 
-    // Atualizar o paciente e seu lead
+    // Atualizar o paciente
     const updatedPatient = await db.patient.update({
-          where: {
+      where: {
         id: params.id,
-          },
-          data: {
+      },
+      data: {
         name: body.name,
         email: body.email,
-        phone: body.phone,
-        lead: {
-          update: {
-            status: body.lead.status,
-            appointmentDate: body.lead.appointmentDate,
-            medicalNotes: body.lead.medicalNotes,
-          }
-        }
-      },
-      include: {
-        lead: {
-          select: {
-            status: true,
-            appointmentDate: true,
-            medicalNotes: true,
-          }
-        }
+        phone: body.phone
       }
     });
 

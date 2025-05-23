@@ -16,16 +16,7 @@ export async function POST(request: Request) {
     console.log('Validando token para paciente:', patientId);
 
     const patient = await prisma.patient.findUnique({
-      where: { id: patientId },
-      include: {
-        user: {
-      select: {
-            name: true,
-            specialty: true,
-            slug: true
-          }
-        }
-      }
+      where: { id: patientId }
     });
 
     if (!patient) {

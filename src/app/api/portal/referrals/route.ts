@@ -44,14 +44,7 @@ export async function GET(request: Request) {
             unlockValue: true,
             unlockType: true,
             unlockedAt: true,
-            textContent: true,
-            page: {
-              select: {
-                id: true,
-                title: true,
-                slug: true
-              }
-            }
+            textContent: true
           }
         }
       }

@@ -38,15 +38,6 @@ export async function GET(request: Request) {
     const patient = await prisma.patient.findUnique({
       where: { id: decoded.patientId },
       include: {
-        user: {
-          select: {
-            name: true,
-            specialty: true,
-            phone: true,
-            image: true,
-            slug: true
-          }
-        },
         referrals: {
           include: {
             page: {
@@ -110,13 +101,6 @@ export async function GET(request: Request) {
       email: patient.email,
       phone: patient.phone,
       hasActiveProducts: patient.hasActiveProducts,
-      doctor: patient.user ? {
-        name: patient.user.name,
-        specialty: patient.user.specialty,
-        phone: patient.user.phone,
-        image: patient.user.image,
-        slug: patient.user.slug
-      } : null,
       referrals: formattedReferrals
     });
   } catch (error) {

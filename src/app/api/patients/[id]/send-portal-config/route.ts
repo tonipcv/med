@@ -26,13 +26,6 @@ export async function POST(
       where: {
         id,
         userId: session.user.id,
-      },
-      include: {
-        user: {
-          select: {
-            name: true,
-          }
-        }
       }
     });
 
@@ -79,7 +72,7 @@ export async function POST(
           
           <p>Olá ${patient.name},</p>
           
-          <p>Seu médico, Dr(a). ${patient.user?.name || 'Médico'}, configurou seu acesso ao portal do paciente.</p>
+          <p>Seu médico configurou seu acesso ao portal do paciente.</p>
           
           <p>Para acessar o portal e definir sua senha, clique no botão abaixo:</p>
           

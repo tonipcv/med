@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
+import { nanoid } from 'nanoid';
 
 // Schema para validação dos dados
 const leadFormSchema = z.object({
@@ -92,6 +93,7 @@ export async function POST(request: Request) {
       try {
         const leadForm = await db.leadForm.create({
           data: {
+            id: nanoid(),
             name: body.name,
             email: body.email,
             whatsapp: body.whatsapp,
@@ -100,8 +102,9 @@ export async function POST(request: Request) {
             employees: body.employees,
             revenue: body.revenue,
             useTechnology: body.useTechnology,
-            status: "Novo"
-          },
+            status: 'Novo',
+            updatedAt: new Date()
+          }
         });
         
         console.log('[API] POST /api/leadform: Dados salvos com sucesso', leadForm);

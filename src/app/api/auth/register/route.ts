@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import nodemailer from "nodemailer";
+import { Prisma } from "@prisma/client";
 
 if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_USER || !process.env.SMTP_PASSWORD || !process.env.SMTP_FROM) {
   throw new Error('Missing SMTP configuration environment variables');
@@ -57,15 +58,17 @@ export async function POST(req: Request) {
     const hashedPassword = await hash(password, 12);
 
     // Create user
+    const userData: Prisma.UserCreateInput = {
+      name,
+      email,
+      password: hashedPassword,
+      emailVerified: new Date(), // Automatically verify the email
+      slug,
+      specialty
+    };
+
     const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        emailVerified: new Date(), // Automatically verify the email
-        slug,
-        specialty
-      },
+      data: userData
     });
 
     console.log('Sending welcome email to:', email);

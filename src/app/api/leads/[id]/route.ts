@@ -171,7 +171,8 @@ export async function PATCH(
       }
     }
 
-    let appointmentDateTime = null;
+    // Converter data e hora em um objeto Date
+    let appointmentDateTime: Date | null = null;
     if (appointmentDate && appointmentTime) {
       appointmentDateTime = new Date(`${appointmentDate}T${appointmentTime}`);
     }

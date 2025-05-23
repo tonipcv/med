@@ -49,18 +49,20 @@ export async function POST(request: Request) {
       where: { id: patient.id },
       data: {
         userId: session.user.id,
-        hasActiveProducts: true
-      },
-      include: {
-        user: {
-          select: {
-            name: true,
-            specialty: true,
-            phone: true,
-            image: true,
-            slug: true
-          }
-        }
+        hasActiveProducts: true,
+        updatedAt: new Date()
+      }
+    });
+
+    // Buscar dados do médico separadamente
+    const doctor = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        name: true,
+        specialty: true,
+        phone: true,
+        image: true,
+        slug: true
       }
     });
 
@@ -72,13 +74,7 @@ export async function POST(request: Request) {
         email: updatedPatient.email,
         phone: updatedPatient.phone,
         hasActiveProducts: updatedPatient.hasActiveProducts,
-        doctor: updatedPatient.user ? {
-          name: updatedPatient.user.name,
-          specialty: updatedPatient.user.specialty,
-          phone: updatedPatient.user.phone,
-          image: updatedPatient.user.image,
-          slug: updatedPatient.user.slug
-        } : null
+        doctor: doctor
       }
     });
   } catch (error) {

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { nanoid } from 'nanoid';
 
 export async function GET() {
   try {
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     console.log('POST /api/pages - Request body:', body);
-    const { title, subtitle, layout, primaryColor, avatarUrl, address, addresses, slug: customSlug, isModal } = body;
+    const { title, subtitle, layout, primaryColor, avatarUrl, address, slug: customSlug, isModal, blocks, socialLinks } = body;
 
     if (!title?.trim()) {
       console.log('POST /api/pages - Missing title');
@@ -109,13 +110,13 @@ export async function POST(request: Request) {
       primaryColor,
       avatarUrl,
       address,
-      addresses,
-      slug,
+      slug
     });
 
     try {
       const page = await prisma.page.create({
         data: {
+          id: nanoid(),
           userId: session.user.id,
           title,
           subtitle: subtitle || null,
@@ -125,24 +126,26 @@ export async function POST(request: Request) {
           avatarUrl: avatarUrl || null,
           address: address || null,
           isModal: isModal || false,
-          addresses: addresses?.length ? {
-            create: addresses.map(addr => ({
-              name: addr.name,
-              address: addr.address,
-              isDefault: addr.isDefault
+          updatedAt: new Date(),
+          blocks: blocks?.length ? {
+            create: blocks.map(block => ({
+              id: nanoid(),
+              type: block.type,
+              content: block.content,
+              order: block.order || 0
             }))
           } : undefined,
-          blocks: {
-            create: [] // Initialize empty blocks array
-          },
-          socialLinks: {
-            create: [] // Initialize empty social links array
-          }
+          socialLinks: socialLinks?.length ? {
+            create: socialLinks.map(link => ({
+              id: nanoid(),
+              platform: link.platform,
+              url: link.url
+            }))
+          } : undefined
         },
         include: {
           blocks: true,
           socialLinks: true,
-          addresses: true,
           user: {
             select: {
               id: true,

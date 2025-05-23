@@ -19,12 +19,7 @@ export async function POST(request: Request) {
         id: true,
         email: true,
         name: true,
-        hasPortalAccess: true,
-        user: {
-          select: {
-            name: true
-          }
-        }
+        hasPortalAccess: true
       }
     })
 
@@ -63,7 +58,7 @@ export async function POST(request: Request) {
     await sendPatientConfirmationEmail({
       to: patient.email,
       patientName: patient.name,
-      doctorName: patient.user?.name || 'Médico',
+      doctorName: 'Médico',
       accessLink
     })
 

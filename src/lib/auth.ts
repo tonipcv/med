@@ -51,15 +51,7 @@ export const authOptions: AuthOptions = {
 
         if (credentials.type === 'patient') {
           const patient = await prisma.patient.findFirst({
-            where: { email: credentials.email },
-            include: {
-              user: {
-                select: {
-                  slug: true,
-                  plan: true
-                }
-              }
-            }
+            where: { email: credentials.email }
           });
 
           if (!patient) {
@@ -79,9 +71,7 @@ export const authOptions: AuthOptions = {
             id: patient.id,
             email: patient.email,
             name: patient.name,
-            type: 'patient' as const,
-            userSlug: patient.user?.slug,
-            plan: patient.user?.plan || undefined
+            type: 'patient' as const
           };
         }
 

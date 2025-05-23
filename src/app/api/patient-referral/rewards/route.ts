@@ -68,6 +68,7 @@ export async function POST(req: NextRequest) {
     // Criar recompensa
     const reward = await prisma.referralReward.create({
       data: {
+        id: nanoid(),
         referralId,
         type,
         title,
@@ -76,6 +77,7 @@ export async function POST(req: NextRequest) {
         unlockType,
         pageId: type === 'PAGE' ? pageId : null,
         textContent: type === 'TEXT' ? textContent : null,
+        updatedAt: new Date()
       }
     });
 
@@ -118,11 +120,7 @@ export async function GET(req: NextRequest) {
         }
       },
       include: {
-        page: {
-          select: {
-            title: true
-          }
-        }
+        referral: true
       },
       orderBy: {
         unlockValue: 'asc'
@@ -132,7 +130,7 @@ export async function GET(req: NextRequest) {
     // Formatar resposta
     const formattedRewards = rewards.map(reward => ({
       ...reward,
-      pageName: reward.type === 'PAGE' ? reward.page?.title : null
+      pageName: null
     }));
 
     return NextResponse.json(formattedRewards);

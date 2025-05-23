@@ -28,18 +28,7 @@ export async function POST(request: NextRequest) {
     console.log('4. Buscando paciente');
     // Buscar paciente pelo email
     const patient = await prisma.patient.findFirst({
-      where: { email },
-      include: {
-        user: {
-          select: {
-            name: true,
-            specialty: true,
-            phone: true,
-            image: true,
-            slug: true
-          }
-        }
-      }
+      where: { email }
     });
 
     console.log('5. Resultado da busca:', { 
@@ -83,15 +72,8 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         id: patient.id,
-      name: patient.name,
-      email: patient.email,
-        doctor: patient.user ? {
-          name: patient.user.name,
-          specialty: patient.user.specialty,
-          phone: patient.user.phone,
-          image: patient.user.image,
-          slug: patient.user.slug
-        } : null
+        name: patient.name,
+        email: patient.email
       }
     });
 

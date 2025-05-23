@@ -98,17 +98,10 @@ export async function PUT(
       data: {
         name: data.name || undefined,
         phone: data.phone || undefined,
-        interest: data.interest !== undefined ? data.interest : undefined,
         indicationId: data.indicationId !== undefined ? data.indicationId : undefined,
         status: data.status || undefined,
         potentialValue: data.potentialValue !== undefined ? parseFloat(String(data.potentialValue)) : undefined,
-        appointmentDate: data.appointmentDate !== undefined ? new Date(data.appointmentDate) : undefined,
-        medicalNotes: data.medicalNotes !== undefined ? data.medicalNotes : undefined,
-        utmSource: data.utmSource !== undefined ? data.utmSource : undefined,
-        utmMedium: data.utmMedium !== undefined ? data.utmMedium : undefined,
-        utmCampaign: data.utmCampaign !== undefined ? data.utmCampaign : undefined,
-        utmTerm: data.utmTerm !== undefined ? data.utmTerm : undefined,
-        utmContent: data.utmContent !== undefined ? data.utmContent : undefined,
+        medicalNotes: data.medicalNotes || undefined,
         updatedAt: new Date()
       },
       include: {
