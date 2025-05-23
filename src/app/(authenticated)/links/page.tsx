@@ -22,7 +22,7 @@ import { PlusCircle, Link as LinkIcon, ExternalLink, Instagram, Youtube, Faceboo
 import { AddressManager, Address } from '@/components/ui/address-manager';
 
 // Get the base URL from environment variable, fallback to production URL if not available
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://med1.app';
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'med1.app';
 
 interface PageBlock {
   id: string;
