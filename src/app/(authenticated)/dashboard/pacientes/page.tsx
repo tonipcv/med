@@ -38,13 +38,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { CSVImportModal } from "@/components/patients/csv-import-modal";
-import { DateTimePicker } from "@/components/ui/date-picker";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select as UISelect,
+  SelectContent as UISelectContent,
+  SelectGroup as UISelectGroup,
+  SelectItem as UISelectItem,
+  SelectLabel as UISelectLabel,
+  SelectTrigger as UISelectTrigger,
+  SelectValue as UISelectValue,
+  SelectSeparator as UISelectSeparator,
+} from "@/components/ui/select";
 
 interface Patient {
   id: string;
@@ -108,22 +118,33 @@ export default function PacientesPage() {
       
       if (response.ok) {
         const data = await response.json();
-        setPatients(data || []);
+        setPatients(Array.isArray(data) ? data : []);
       } else {
         console.error('Erro ao buscar pacientes:', response.statusText);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os pacientes",
+          variant: "destructive"
+        });
         setPatients([]);
       }
     } catch (error) {
       console.error('Erro ao buscar pacientes:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao carregar os pacientes",
+        variant: "destructive"
+      });
       setPatients([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch patients data when session changes
   useEffect(() => {
-    fetchPatients();
+    if (session?.user?.id) {
+      fetchPatients();
+    }
   }, [session]);
 
   // Cleanup effect for dropdowns
@@ -184,19 +205,12 @@ export default function PacientesPage() {
   }, [isViewModalOpen, isEditModalOpen]);
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'novo':
         return (
           <Badge className="bg-blue-100 text-blue-800 border-none hover:bg-blue-200 flex items-center gap-1">
             <UserIcon className="h-3 w-3" />
             <span>Novo</span>
-          </Badge>
-        );
-      case 'contato':
-        return (
-          <Badge className="bg-amber-100 text-amber-800 border-none hover:bg-amber-200 flex items-center gap-1">
-            <PhoneIcon className="h-3 w-3" />
-            <span>Contato</span>
           </Badge>
         );
       case 'agendado':
@@ -210,7 +224,7 @@ export default function PacientesPage() {
         return (
           <Badge className="bg-green-100 text-green-800 border-none hover:bg-green-200 flex items-center gap-1">
             <CheckCircleIcon className="h-3 w-3" />
-            <span>Atendido</span>
+            <span>Concluído</span>
           </Badge>
         );
       default:
@@ -225,7 +239,7 @@ export default function PacientesPage() {
 
   const filteredPatients = patients.filter(patient => {
     // Filter by status if not "all"
-    if (activeTab !== "all" && patient.lead.status !== activeTab) {
+    if (activeTab !== "all" && patient.lead?.status !== activeTab) {
       return false;
     }
     
@@ -253,16 +267,14 @@ export default function PacientesPage() {
       name: patient.name,
       email: patient.email,
       phone: patient.phone,
-      status: patient.lead.status,
-      appointmentDate: patient.lead.appointmentDate 
-        ? new Date(patient.lead.appointmentDate).toISOString().slice(0, 16)
-        : "",
-      medicalNotes: patient.lead.medicalNotes || ""
+      status: patient.lead?.status || 'novo',
+      appointmentDate: patient.lead?.appointmentDate || '',
+      medicalNotes: patient.lead?.medicalNotes || ''
     });
     setIsEditModalOpen(true);
   };
 
-  const handleCreatePatient = () => {
+  const handleCreateModal = () => {
     setCreateFormData({
       name: "",
       email: "",
@@ -366,7 +378,7 @@ export default function PacientesPage() {
       console.error('Erro ao atualizar paciente:', error);
       toast({
         title: "Erro",
-        description: error instanceof Error ? error.message : "Não foi possível atualizar o paciente. Tente novamente.",
+        description: error instanceof Error ? error.message : "Não foi possível atualizar o paciente",
         variant: "destructive",
       });
     } finally {
@@ -374,23 +386,12 @@ export default function PacientesPage() {
     }
   };
 
-  const handleCreateNewPatient = async () => {
-    // Validar campos obrigatórios - only validate required fields (name, email, phone)
+  const handleCreatePatient = async () => {
+    // Validar dados obrigatórios
     if (!createFormData.name || !createFormData.email || !createFormData.phone) {
       toast({
-        title: "Campos obrigatórios",
+        title: "Erro",
         description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validar formato do email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(createFormData.email)) {
-      toast({
-        title: "Email inválido",
-        description: "Por favor, insira um email válido.",
         variant: "destructive",
       });
       return;
@@ -404,9 +405,9 @@ export default function PacientesPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: createFormData.name,
-          email: createFormData.email,
-          phone: createFormData.phone,
+          name: createFormData.name.trim(),
+          email: createFormData.email.trim(),
+          phone: createFormData.phone.trim(),
           hasPortalAccess: createFormData.hasPortalAccess,
           lead: {
             status: createFormData.status,
@@ -417,89 +418,41 @@ export default function PacientesPage() {
       });
 
       const data = await response.json();
-      
-      console.log('API response:', { status: response.status, data });
 
       if (response.ok) {
         // Adiciona o novo paciente à lista local
-        setPatients(prevPatients => [data.data, ...prevPatients]);
+        setPatients(prevPatients => [data, ...prevPatients]);
         
         toast({
-          title: "Paciente criado",
+          title: "Sucesso",
           description: "O novo paciente foi criado com sucesso.",
         });
         
         // Fechar modal
         setIsCreateModalOpen(false);
+        
+        // Limpar formulário
+        setCreateFormData({
+          name: "",
+          email: "",
+          phone: "",
+          status: "novo",
+          appointmentDate: "",
+          medicalNotes: "",
+          hasPortalAccess: false
+        });
       } else {
-        // Tratar diferentes tipos de erro da API baseado no status code
-        if (response.status === 409) {
-          // Conflito - email duplicado
-          toast({
-            title: "Email já cadastrado",
-            description: "Já existe um paciente cadastrado com este email.",
-            variant: "destructive",
-          });
-        } else {
-          // Outros erros da API
         throw new Error(data.error || 'Erro ao criar paciente');
-        }
       }
     } catch (error) {
       console.error('Erro ao criar paciente:', error);
-      
-      // Exibir a mensagem de erro (se já não foi exibida pelo bloco acima)
-      const errorMessage = error instanceof Error ? error.message : "";
-      
-      // Só exibe o toast se não for um erro 409 (que já foi tratado)
-      if (!errorMessage.includes("Email já cadastrado")) {
       toast({
         title: "Erro",
-          description: errorMessage || "Não foi possível criar o paciente. Tente novamente.",
+        description: error instanceof Error ? error.message : "Não foi possível criar o paciente",
         variant: "destructive",
       });
-      }
     } finally {
       setIsCreating(false);
-    }
-  };
-
-  const handleSendPortalConfig = async (patient: Patient) => {
-    if (sendingPortalConfig[patient.id]) return;
-
-    try {
-      setSendingPortalConfig(prev => ({ ...prev, [patient.id]: true }));
-      setPortalConfigSent(prev => ({ ...prev, [patient.id]: false }));
-
-      const response = await fetch(`/api/patients/${patient.id}/send-portal-config`, {
-        method: 'POST',
-      });
-
-      if (response.ok) {
-        toast({
-          title: "E-mail enviado",
-          description: "O e-mail de configuração do portal foi enviado com sucesso.",
-        });
-        setPortalConfigSent(prev => ({ ...prev, [patient.id]: true }));
-      } else {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao enviar e-mail');
-      }
-    } catch (error) {
-      console.error('Erro ao enviar e-mail:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível enviar o e-mail de configuração. Tente novamente.",
-        variant: "destructive",
-      });
-      setPortalConfigSent(prev => ({ ...prev, [patient.id]: false }));
-    } finally {
-      setSendingPortalConfig(prev => ({ ...prev, [patient.id]: false }));
-
-      // Reset o status de enviado após 3 segundos
-      setTimeout(() => {
-        setPortalConfigSent(prev => ({ ...prev, [patient.id]: false }));
-      }, 3000);
     }
   };
 
@@ -530,7 +483,7 @@ export default function PacientesPage() {
       console.error('Erro ao excluir paciente:', error);
       toast({
         title: "Erro",
-        description: error instanceof Error ? error.message : "Não foi possível excluir o paciente. Tente novamente.",
+        description: error instanceof Error ? error.message : "Não foi possível excluir o paciente",
         variant: "destructive",
       });
     }
@@ -552,6 +505,19 @@ export default function PacientesPage() {
     setIsImportModalOpen(true);
   };
 
+  const handleOpenCreateModal = () => {
+    setCreateFormData({
+      name: "",
+      email: "",
+      phone: "",
+      status: "novo",
+      appointmentDate: "",
+      medicalNotes: "",
+      hasPortalAccess: false
+    });
+    setIsCreateModalOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="min-h-[100dvh] bg-gray-100 pt-20 pb-24 md:pt-12 md:pb-16 flex items-center justify-center">
@@ -564,246 +530,287 @@ export default function PacientesPage() {
   }
 
   return (
-    <>
     <div className="min-h-[100dvh] bg-gray-100 pt-20 pb-24 md:pt-12 md:pb-16 px-2 sm:px-4">
       <div className="container mx-auto px-0 sm:pl-4 md:pl-8 lg:pl-16 max-w-full sm:max-w-[95%] md:max-w-[90%] lg:max-w-[85%]">
-          <div className="flex flex-col gap-6">
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
-              <div>
-                <h1 className="text-lg md:text-xl font-bold text-gray-900 tracking-[-0.03em] font-inter">Pacientes</h1>
-                <p className="text-xs md:text-sm text-gray-600 tracking-[-0.03em] font-inter">Gerencie seus pacientes</p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 tracking-[-0.03em] font-inter">Lista de Pacientes</h2>
+            <p className="text-xs md:text-sm text-gray-600 tracking-[-0.03em] font-inter">Gerencie seus pacientes</p>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="h-9 bg-white text-gray-700 border-gray-200 hover:bg-gray-100">
+                <PlusIcon className="h-4 w-4 mr-2" />
+                <span>Adicionar</span>
+                <ChevronDownIcon className="h-4 w-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleOpenCreateModal} className="cursor-pointer">
+                <DocumentTextIcon className="h-4 w-4 mr-2" />
+                <span>Novo Paciente</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsImportModalOpen(true)} className="cursor-pointer">
+                <TableCellsIcon className="h-4 w-4 mr-2" />
+                <span>Import CSV</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <Card className="bg-gray-800/5 border-0 shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.16)] transition-all duration-300 rounded-2xl">
+          <CardContent className="pt-6 pb-4 sm:pb-3 px-6 sm:px-4">
+            {/* Desktop Search and Filter */}
+            <div className="hidden md:flex items-center justify-end gap-4 mb-8">
+              <UISelect
+                value={activeTab}
+                onValueChange={setActiveTab}
+              >
+                <UISelectTrigger className="w-[180px] bg-white border-gray-200 focus:border-gray-300 text-gray-900 rounded-xl h-10">
+                  <UISelectValue placeholder="Filtrar por status" />
+                </UISelectTrigger>
+                <UISelectContent>
+                  <UISelectGroup>
+                    <UISelectLabel>Status</UISelectLabel>
+                    <UISelectItem value="all">Todos</UISelectItem>
+                    <UISelectItem value="novo">Novos</UISelectItem>
+                    <UISelectItem value="agendado">Agendados</UISelectItem>
+                    <UISelectItem value="concluído">Concluídos</UISelectItem>
+                  </UISelectGroup>
+                </UISelectContent>
+              </UISelect>
+              <div className="relative">
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="search"
+                  placeholder="Buscar pacientes..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 w-[280px] bg-white border-gray-200 focus:border-gray-300 text-gray-900 rounded-xl h-10"
+                />
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="h-9 bg-white text-gray-700 border-gray-200 hover:bg-gray-100">
-                    <PlusIcon className="h-4 w-4 mr-2" />
-                    <span>Adicionar</span>
-                    <ChevronDownIcon className="h-4 w-4 ml-2" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[200px]">
-                  <DropdownMenuItem onClick={handleCreatePatient} className="cursor-pointer">
-                    <DocumentTextIcon className="h-4 w-4 mr-2" />
-                    <span>Novo Paciente</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleOpenImportModal} className="cursor-pointer">
-                    <TableCellsIcon className="h-4 w-4 mr-2" />
-                    <span>Import CSV</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
 
-            {/* Search and Filters */}
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200/50">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="Buscar pacientes..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 h-11 bg-gray-50 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Tabs value={activeTab} className="w-full md:w-auto">
-                    <TabsList className="h-11 bg-gray-50 p-1 rounded-lg">
-                      <TabsTrigger 
-                        value="all"
-                        onClick={() => setActiveTab("all")}
-                        className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                      >
-                        Todos
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="novo"
-                        onClick={() => setActiveTab("novo")}
-                        className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                      >
-                        Novos
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="agendado"
-                        onClick={() => setActiveTab("agendado")}
-                        className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                      >
-                        Agendados
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="concluído"
-                        onClick={() => setActiveTab("concluído")}
-                        className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                      >
-                        Concluídos
-                      </TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                </div>
+            {/* Mobile Search */}
+            <div className="md:hidden space-y-4 mb-6">
+              <div className="relative">
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="search"
+                  placeholder="Buscar pacientes..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 w-full bg-white border-gray-200 focus:border-gray-300 text-gray-900 rounded-xl h-10"
+                />
               </div>
+              <UISelect
+                value={activeTab}
+                onValueChange={setActiveTab}
+              >
+                <UISelectTrigger className="w-full bg-white border-gray-200 focus:border-gray-300 text-gray-900 rounded-xl h-10">
+                  <UISelectValue placeholder="Filtrar por status" />
+                </UISelectTrigger>
+                <UISelectContent>
+                  <UISelectGroup>
+                    <UISelectLabel>Status</UISelectLabel>
+                    <UISelectItem value="all">Todos</UISelectItem>
+                    <UISelectItem value="novo">Novos</UISelectItem>
+                    <UISelectItem value="agendado">Agendados</UISelectItem>
+                    <UISelectItem value="concluído">Concluídos</UISelectItem>
+                  </UISelectGroup>
+                </UISelectContent>
+              </UISelect>
             </div>
 
             {/* Patient List */}
-            <Card className="border-0 shadow-lg rounded-2xl overflow-hidden">
-              <CardContent className="p-0">
-                {/* Mobile view */}
-                <div className="md:hidden divide-y divide-gray-200">
-                  {filteredPatients.length === 0 ? (
-                    <div className="p-8 text-center">
-                      <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                        <UserIcon className="h-12 w-12 text-gray-400" />
-                      </div>
-                      <h3 className="text-sm font-medium text-gray-900 mb-1">Nenhum paciente encontrado</h3>
-                      <p className="text-sm text-gray-500">Tente ajustar seus filtros ou adicione um novo paciente.</p>
-                    </div>
-                  ) : (
-                    filteredPatients.map((patient) => (
-                      <div key={patient.id} className="p-4 bg-white hover:bg-gray-50 transition-colors">
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h3 className="font-medium text-gray-900">{patient.name}</h3>
-                            <p className="text-sm text-gray-500">{patient.email}</p>
-                          </div>
+            <div className="overflow-x-auto -mx-4 px-4">
+              {/* Mobile view for small screens */}
+              <div className="md:hidden space-y-3">
+                {filteredPatients.length > 0 ? (
+                  filteredPatients.map((patient) => (
+                    <div key={patient.id} className="bg-white p-3.5 rounded-xl shadow-sm border border-gray-100">
+                      <div className="flex justify-between items-start mb-2.5">
+                        <div className="font-semibold text-base text-gray-900">{patient.name}</div>
+                        <div>
                           {getStatusBadge(patient.lead?.status || 'novo')}
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 h-9 bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
-                            onClick={() => handleViewPatient(patient)}
-                          >
-                            <EyeIcon className="h-4 w-4 mr-1.5" />
-                            Ver detalhes
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-9 bg-white border-gray-200 text-gray-700 hover:bg-gray-50 px-2.5"
-                            onClick={() => handleEditPatient(patient)}
-                          >
-                            <PencilIcon className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-9 bg-white border-gray-200 text-gray-700 hover:bg-gray-50 px-2.5"
-                            onClick={() => {
-                              setPatientToDelete(patient);
-                              setIsDeleteModalOpen(true);
-                            }}
-                          >
-                            <TrashIcon className="h-4 w-4" />
-                          </Button>
+                      </div>
+                      
+                      <div className="space-y-2 mb-3 text-xs">
+                        <div className="flex">
+                          <div className="w-20 flex items-center gap-1 text-gray-500">
+                            <PhoneIcon className="h-3 w-3" />
+                            <span>Telefone:</span>
+                          </div>
+                          <div className="text-gray-700 font-medium">{patient.phone}</div>
+                        </div>
+                        
+                        <div className="flex">
+                          <div className="w-20 flex items-center gap-1 text-gray-500">
+                            <EnvelopeIcon className="h-3 w-3" />
+                            <span>Email:</span>
+                          </div>
+                          <div className="text-gray-700 font-medium truncate">{patient.email}</div>
+                        </div>
+                        
+                        <div className="flex">
+                          <div className="w-20 flex items-center gap-1 text-gray-500">
+                            <CalendarIcon className="h-3 w-3" />
+                            <span>Data:</span>
+                          </div>
+                          <div className="text-gray-700 font-medium">
+                            {format(new Date(patient.createdAt), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                          </div>
                         </div>
                       </div>
-                    ))
-                  )}
+                      
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewPatient(patient)}
+                          className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors text-xs h-7 w-7 p-0"
+                        >
+                          <EyeIcon className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditPatient(patient)}
+                          className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors text-xs h-7 w-7 p-0"
+                        >
+                          <PencilIcon className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setPatientToDelete(patient);
+                            setIsDeleteModalOpen(true);
+                          }}
+                          className="text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors text-xs h-7 w-7 p-0"
+                        >
+                          <TrashIcon className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                ) : !loading ? (
+                  <div className="bg-white p-4 rounded-xl shadow-sm text-center text-gray-500 text-sm">
+                    Nenhum paciente encontrado
                   </div>
-                  
-                  {/* Desktop table view */}
-                <div className="hidden md:block">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-gray-50 border-b border-gray-200">
-                        <th className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
-                        <th className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telefone</th>
-                        <th className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data de Cadastro</th>
-                        <th className="py-4 px-6 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                ) : null}
+                
+                {loading && (
+                  <div className="bg-white p-4 rounded-xl shadow-sm text-center text-gray-500 text-sm">
+                    <div className="animate-spin rounded-full h-5 w-5 border border-gray-400 border-t-gray-600 mx-auto mb-2"></div>
+                    Carregando pacientes...
+                  </div>
+                )}
+              </div>
+              
+              {/* Desktop table view */}
+              <div className="hidden md:block">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="py-3 sm:py-2 px-4 sm:px-3 text-left text-sm sm:text-xs font-medium text-gray-500">Nome</th>
+                      <th className="py-3 sm:py-2 px-4 sm:px-3 text-left text-sm sm:text-xs font-medium text-gray-500">Email</th>
+                      <th className="py-3 sm:py-2 px-4 sm:px-3 text-left text-sm sm:text-xs font-medium text-gray-500">Telefone</th>
+                      <th className="py-3 sm:py-2 px-4 sm:px-3 text-left text-sm sm:text-xs font-medium text-gray-500">Status</th>
+                      <th className="py-3 sm:py-2 px-4 sm:px-3 text-left text-sm sm:text-xs font-medium text-gray-500">Data de Cadastro</th>
+                      <th className="py-3 sm:py-2 px-4 sm:px-3 text-right text-sm sm:text-xs font-medium text-gray-500">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {filteredPatients.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-12 text-center">
+                          <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                            <UserIcon className="h-12 w-12 text-gray-400" />
+                          </div>
+                          <h3 className="text-sm font-medium text-gray-900 mb-1">Nenhum paciente encontrado</h3>
+                          <p className="text-sm text-gray-500">Tente ajustar seus filtros ou adicione um novo paciente.</p>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredPatients.length === 0 ? (
-                        <tr>
-                          <td colSpan={6} className="px-6 py-12 text-center">
-                            <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                              <UserIcon className="h-12 w-12 text-gray-400" />
-                            </div>
-                            <h3 className="text-sm font-medium text-gray-900 mb-1">Nenhum paciente encontrado</h3>
-                            <p className="text-sm text-gray-500">Tente ajustar seus filtros ou adicione um novo paciente.</p>
-                          </td>
-                        </tr>
-                      ) : (
-                        filteredPatients.map((patient) => (
+                    ) : (
+                      filteredPatients.map((patient) => (
                         <tr key={patient.id} className="hover:bg-gray-50 transition-colors">
-                            <td className="py-4 px-6">
-                              <div className="font-medium text-gray-900">{patient.name}</div>
+                          <td className="py-3 sm:py-2 px-4 sm:px-3">
+                            <div className="font-medium text-base sm:text-sm text-gray-900">{patient.name}</div>
                           </td>
-                            <td className="py-4 px-6 text-gray-500">{patient.email}</td>
-                            <td className="py-4 px-6 text-gray-500">{patient.phone}</td>
-                            <td className="py-4 px-6">{getStatusBadge(patient.lead?.status || 'novo')}</td>
-                            <td className="py-4 px-6 text-gray-500">
+                          <td className="py-3 sm:py-2 px-4 sm:px-3">
+                            <div className="text-gray-600 text-sm sm:text-xs">{patient.email}</div>
+                          </td>
+                          <td className="py-3 sm:py-2 px-4 sm:px-3">
+                            <div className="text-gray-600 text-sm sm:text-xs">{patient.phone}</div>
+                          </td>
+                          <td className="py-3 sm:py-2 px-4 sm:px-3">
+                            {getStatusBadge(patient.lead?.status || 'novo')}
+                          </td>
+                          <td className="py-3 sm:py-2 px-4 sm:px-3">
+                            <div className="text-gray-600 text-sm sm:text-xs">
                               {format(new Date(patient.createdAt), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                            </div>
                           </td>
-                            <td className="py-4 px-6">
+                          <td className="py-3 sm:py-2 px-4 sm:px-3">
                             <div className="flex justify-end gap-2">
                               <Button
                                 variant="outline"
                                 size="sm"
-                                  className="h-9 bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                                className="h-9 bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
                                 onClick={() => handleViewPatient(patient)}
                               >
-                                  <EyeIcon className="h-4 w-4 mr-1.5" />
-                                  Ver detalhes
+                                <EyeIcon className="h-4 w-4 mr-1.5" />
+                                Ver detalhes
                               </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                  className="h-9 bg-white border-gray-200 text-gray-700 hover:bg-gray-50 px-2.5"
+                                className="h-9 bg-white border-gray-200 text-gray-700 hover:bg-gray-50 px-2.5"
                                 onClick={() => handleEditPatient(patient)}
                               >
-                                  <PencilIcon className="h-4 w-4" />
+                                <PencilIcon className="h-4 w-4" />
                               </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                  className="h-9 bg-white border-gray-200 text-gray-700 hover:bg-gray-50 px-2.5"
-                                  onClick={() => {
-                                    setPatientToDelete(patient);
-                                    setIsDeleteModalOpen(true);
-                                  }}
-                                >
-                                  <TrashIcon className="h-4 w-4" />
+                                className="h-9 bg-white border-gray-200 text-gray-700 hover:bg-gray-50 px-2.5"
+                                onClick={() => {
+                                  setPatientToDelete(patient);
+                                  setIsDeleteModalOpen(true);
+                                }}
+                              >
+                                <TrashIcon className="h-4 w-4" />
                               </Button>
                             </div>
                           </td>
                         </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          </div>
-        </div>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* View Modal */}
+      {/* View/Edit Modal */}
       <Sheet
         open={isViewModalOpen || isEditModalOpen}
         onOpenChange={(open) => {
-        if (!open) {
-            // Close dropdowns
+          if (!open) {
             setIsStatusOpen(false);
             setIsCreateStatusOpen(false);
-            
-            // Close modals
             if (isEditModalOpen) {
-          setIsEditModalOpen(false);
+              setIsEditModalOpen(false);
               setIsViewModalOpen(false);
             } else {
               setIsViewModalOpen(false);
             }
-            
-            // Refresh data
             fetchPatients();
-        }
+          }
         }}
       >
         <SheetContent side="right" className="w-full sm:max-w-[900px] p-0 bg-gray-50">
@@ -825,132 +832,151 @@ export default function PacientesPage() {
               </SheetHeader>
             </div>
 
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 overflow-y-auto">
               {isEditModalOpen ? (
-                // Edit Form
                 <div className="p-6">
                   <div className="space-y-6">
+                    {/* Informações Básicas */}
                     <div>
-                      <Label htmlFor="name">Nome completo</Label>
-                      <Input 
-                        id="name" 
-                        name="name"
-                        value={editFormData.name}
-                        onChange={handleFormChange}
-                        className="mt-1.5"
-                      />
+                      <h3 className="text-sm font-medium text-gray-500 mb-3">Informações Básicas</h3>
+                      <div className="grid gap-4 bg-gray-50/50 p-4 rounded-lg">
+                        <div className="space-y-2">
+                          <Label htmlFor="name" className="text-sm text-gray-700">Nome</Label>
+                          <Input
+                            id="name"
+                            name="name"
+                            value={editFormData.name}
+                            onChange={handleFormChange}
+                            placeholder="Nome do paciente"
+                            className="bg-white/50 border-gray-200 focus:border-gray-300 text-gray-900"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="email" className="text-sm text-gray-700">Email</Label>
+                          <Input
+                            id="email"
+                            name="email"
+                            type="email"
+                            value={editFormData.email}
+                            onChange={handleFormChange}
+                            placeholder="Email do paciente"
+                            className="bg-white/50 border-gray-200 focus:border-gray-300 text-gray-900"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="phone" className="text-sm text-gray-700">Telefone</Label>
+                          <Input
+                            id="phone"
+                            name="phone"
+                            value={editFormData.phone}
+                            onChange={handleFormChange}
+                            placeholder="Telefone do paciente"
+                            className="bg-white/50 border-gray-200 focus:border-gray-300 text-gray-900"
+                          />
+                        </div>
+                      </div>
                     </div>
 
+                    {/* Status e Consulta */}
                     <div>
-                      <Label htmlFor="email">Email</Label>
-                      <Input 
-                        id="email" 
-                        name="email"
-                        type="email" 
-                        value={editFormData.email}
-                        onChange={handleFormChange}
-                        className="mt-1.5"
-                      />
+                      <h3 className="text-sm font-medium text-gray-500 mb-3">Status e Consulta</h3>
+                      <div className="grid gap-4 bg-gray-50/50 p-4 rounded-lg">
+                        <div className="space-y-2">
+                          <Label htmlFor="status" className="text-sm text-gray-700">Status</Label>
+                          <UISelect
+                            value={editFormData.status}
+                            onValueChange={handleStatusChange}
+                          >
+                            <UISelectTrigger className="bg-white/50 border-gray-200 focus:border-gray-300 text-gray-900">
+                              <UISelectValue placeholder="Selecione o status" />
+                            </UISelectTrigger>
+                            <UISelectContent>
+                              <UISelectGroup>
+                                <UISelectItem value="novo">Novo</UISelectItem>
+                                <UISelectItem value="agendado">Agendado</UISelectItem>
+                                <UISelectItem value="concluído">Concluído</UISelectItem>
+                              </UISelectGroup>
+                            </UISelectContent>
+                          </UISelect>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="appointmentDate" className="text-sm text-gray-700">Data da Consulta</Label>
+                          <DatePicker
+                            date={editFormData.appointmentDate ? new Date(editFormData.appointmentDate) : null}
+                            onChange={handleAppointmentDateChange}
+                            showTimeSelect={true}
+                            dateFormat="dd/MM/yyyy HH:mm"
+                          />
+                        </div>
+                      </div>
                     </div>
 
+                    {/* Prontuário */}
                     <div>
-                      <Label htmlFor="phone">Telefone</Label>
-                      <Input 
-                        id="phone" 
-                        name="phone"
-                        value={editFormData.phone}
-                        onChange={handleFormChange}
-                        className="mt-1.5"
-                      />
+                      <h3 className="text-sm font-medium text-gray-500 mb-3">Prontuário</h3>
+                      <div className="grid gap-4 bg-gray-50/50 p-4 rounded-lg">
+                        <div className="space-y-2">
+                          <Label htmlFor="medicalNotes" className="text-sm text-gray-700">Anotações</Label>
+                          <Textarea
+                            id="medicalNotes"
+                            name="medicalNotes"
+                            value={editFormData.medicalNotes}
+                            onChange={handleFormChange}
+                            placeholder="Anotações sobre o paciente"
+                            className="bg-white/50 border-gray-200 focus:border-gray-300 text-gray-900 min-h-[100px]"
+                          />
+                        </div>
+                      </div>
                     </div>
 
-                    <div>
-                      <Label>Status</Label>
-                      <div className="relative mt-1.5">
-                        <button
-                          type="button"
-                          className={cn(
-                            "w-full flex items-center justify-between rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500",
-                            isStatusOpen && "ring-2 ring-gray-500"
-                          )}
-                          onClick={() => setIsStatusOpen(!isStatusOpen)}
-                        >
-                          <span>{editFormData.status || "Selecione um status"}</span>
-                          <ChevronDownIcon className="h-4 w-4 text-gray-500" />
-                        </button>
-                        {isStatusOpen && (
-                          <div className="absolute z-10 mt-1 w-full rounded-md border border-gray-200 bg-white shadow-lg">
-                            <div className="py-1">
-                              {["novo", "contato", "agendado", "concluído"].map((status) => (
-                                <button
-                                  key={status}
-                                  type="button"
-                                  className={cn(
-                                    "w-full px-3 py-2 text-left text-sm hover:bg-gray-50",
-                                    editFormData.status === status && "bg-gray-50"
-                                  )}
-                                  onClick={() => {
-                                    handleStatusChange(status);
-                                    setIsStatusOpen(false);
-                                  }}
-                                >
-                                  {status}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsEditModalOpen(false)}
+                        className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        onClick={handleUpdatePatient}
+                        disabled={isSaving}
+                        className="bg-gray-900 text-white hover:bg-gray-800"
+                      >
+                        {isSaving ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border border-white border-t-transparent mr-2"></div>
+                            Salvando...
+                          </>
+                        ) : (
+                          'Salvar Alterações'
                         )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="appointmentDate">Data da Consulta</Label>
-                      <div className="mt-1.5">
-                        <DateTimePicker
-                          date={editFormData.appointmentDate ? new Date(editFormData.appointmentDate) : null}
-                          onChange={handleAppointmentDateChange}
-                          placeholder="Selecione data e hora da consulta"
-                      />
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="medicalNotes">Anotações Médicas</Label>
-                      <Textarea 
-                        id="medicalNotes" 
-                        name="medicalNotes"
-                        value={editFormData.medicalNotes}
-                        onChange={handleFormChange}
-                        className="mt-1.5 min-h-[100px]"
-                      />
+                      </Button>
                     </div>
                   </div>
                 </div>
-              ) : (
-                // View Content
+              ) : viewingPatient && (
                 <div className="p-6">
                   <div className="space-y-6">
                     {/* Informações Básicas */}
                     <div className="bg-white rounded-lg border border-gray-200 p-6">
                       <h3 className="text-base font-medium text-gray-900 mb-4">Informações Básicas</h3>
-                      
                       <div className="grid gap-4">
                         <div>
                           <p className="text-xs text-gray-500">Nome completo</p>
-                          <p className="text-sm text-gray-900">{viewingPatient?.name}</p>
+                          <p className="text-sm text-gray-900">{viewingPatient.name}</p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-500">Email</p>
-                          <p className="text-sm text-gray-900">{viewingPatient?.email}</p>
+                          <p className="text-sm text-gray-900">{viewingPatient.email}</p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-500">Telefone</p>
-                          <p className="text-sm text-gray-900">{viewingPatient?.phone}</p>
+                          <p className="text-sm text-gray-900">{viewingPatient.phone}</p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-500">Data de cadastro</p>
                           <p className="text-sm text-gray-900">
-                            {viewingPatient?.createdAt && format(new Date(viewingPatient.createdAt), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                            {format(new Date(viewingPatient.createdAt), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                           </p>
                         </div>
                       </div>
@@ -959,15 +985,14 @@ export default function PacientesPage() {
                     {/* Status e Consulta */}
                     <div className="bg-white rounded-lg border border-gray-200 p-6">
                       <h3 className="text-base font-medium text-gray-900 mb-4">Status e Consulta</h3>
-                      
                       <div className="grid gap-4">
                         <div>
                           <p className="text-xs text-gray-500 mb-1">Status atual</p>
-                          {getStatusBadge(viewingPatient?.lead?.status || 'novo')}
+                          {getStatusBadge(viewingPatient.lead?.status || 'novo')}
                         </div>
                         <div>
                           <p className="text-xs text-gray-500 mb-1">Próxima consulta</p>
-                          {viewingPatient?.lead?.appointmentDate ? (
+                          {viewingPatient.lead?.appointmentDate ? (
                             <p className="text-sm text-gray-900">
                               {format(new Date(viewingPatient.lead.appointmentDate), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
                             </p>
@@ -978,11 +1003,11 @@ export default function PacientesPage() {
                       </div>
                     </div>
 
-                    {/* Prontuário Médico */}
+                    {/* Prontuário */}
                     <div className="bg-white rounded-lg border border-gray-200 p-6">
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-base font-medium text-gray-900">Prontuário Médico</h3>
-                        {!viewingPatient?.lead?.medicalNotes && (
+                        <h3 className="text-base font-medium text-gray-900">Prontuário</h3>
+                        {!viewingPatient.lead?.medicalNotes && (
                           <Button
                             variant="link"
                             className="h-auto p-0 text-blue-600 hover:text-blue-700 whitespace-nowrap"
@@ -995,10 +1020,11 @@ export default function PacientesPage() {
                           </Button>
                         )}
                       </div>
-                      
-                      {viewingPatient?.lead?.medicalNotes ? (
+                      {viewingPatient.lead?.medicalNotes ? (
                         <div className="bg-gray-50 rounded-lg p-6">
-                          <p className="text-base text-gray-700 whitespace-pre-wrap leading-relaxed">{viewingPatient.lead.medicalNotes}</p>
+                          <p className="text-base text-gray-700 whitespace-pre-wrap leading-relaxed">
+                            {viewingPatient.lead.medicalNotes}
+                          </p>
                         </div>
                       ) : (
                         <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-500">
@@ -1006,48 +1032,36 @@ export default function PacientesPage() {
                         </div>
                       )}
                     </div>
+
+                    <div className="flex items-center justify-end gap-2 pt-4">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setIsViewModalOpen(false);
+                          handleEditPatient(viewingPatient);
+                        }}
+                        className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
+                      >
+                        <PencilIcon className="h-4 w-4 mr-2" />
+                        Editar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setIsViewModalOpen(false);
+                          setPatientToDelete(viewingPatient);
+                          setIsDeleteModalOpen(true);
+                        }}
+                        className="bg-white border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300"
+                      >
+                        <TrashIcon className="h-4 w-4 mr-2" />
+                        Excluir
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
             </ScrollArea>
-            
-            <div className="px-6 py-4 border-t border-gray-200 bg-white">
-              <div className="flex justify-end gap-3">
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setIsViewModalOpen(false);
-                    setIsEditModalOpen(false);
-                  }} 
-                  className="h-10"
-                >
-                  Cancelar
-                </Button>
-                {isEditModalOpen ? (
-                <Button 
-                    onClick={handleUpdatePatient}
-                    className="h-10"
-                    disabled={isSaving}
-                  >
-                    {isSaving ? (
-                      <>
-                        <span className="animate-spin rounded-full h-4 w-4 border border-current border-t-transparent mr-2"></span>
-                        Salvando...
-                      </>
-                    ) : "Salvar alterações"}
-                  </Button>
-                ) : (
-                  <Button 
-                  onClick={() => {
-                      setIsEditModalOpen(true);
-                    }}
-                    className="h-10"
-                  >
-                    Editar
-                  </Button>
-                )}
-              </div>
-            </div>
           </div>
         </SheetContent>
       </Sheet>
@@ -1056,13 +1070,10 @@ export default function PacientesPage() {
       <Sheet
         open={isCreateModalOpen}
         onOpenChange={(open) => {
-            setIsCreateModalOpen(open);
-            if (!open) {
-            // Close dropdowns
-              setIsStatusOpen(false);
+          setIsCreateModalOpen(open);
+          if (!open) {
+            setIsStatusOpen(false);
             setIsCreateStatusOpen(false);
-            
-            // Refresh data
             fetchPatients();
           }
         }}
@@ -1080,161 +1091,197 @@ export default function PacientesPage() {
               </SheetHeader>
             </div>
 
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 overflow-y-auto">
               <div className="p-6">
                 <div className="space-y-6">
-                    <>
-                      <div>
-                        <Label htmlFor="name">Nome completo</Label>
-                        <Input 
-                          id="name" 
+                  {/* Informações Básicas */}
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 mb-3">Informações Básicas</h3>
+                    <div className="grid gap-4 bg-gray-50/50 p-4 rounded-lg">
+                      <div className="space-y-2">
+                        <Label htmlFor="name" className="text-sm text-gray-700">Nome</Label>
+                        <Input
+                          id="name"
                           name="name"
                           value={createFormData.name}
                           onChange={handleCreateFormChange}
-                          className="mt-1.5"
-                          placeholder="Digite o nome completo do paciente"
+                          placeholder="Nome do paciente"
+                          className="bg-white/50 border-gray-200 focus:border-gray-300 text-gray-900"
                         />
                       </div>
-
-                      <div>
-                        <Label htmlFor="email">Email</Label>
-                        <Input 
-                          id="email" 
+                      <div className="space-y-2">
+                        <Label htmlFor="email" className="text-sm text-gray-700">Email</Label>
+                        <Input
+                          id="email"
                           name="email"
-                          type="email" 
+                          type="email"
                           value={createFormData.email}
                           onChange={handleCreateFormChange}
-                          className="mt-1.5"
-                          placeholder="Digite o email do paciente"
+                          placeholder="Email do paciente"
+                          className="bg-white/50 border-gray-200 focus:border-gray-300 text-gray-900"
                         />
                       </div>
-
-                      <div>
-                        <Label htmlFor="phone">Telefone</Label>
-                        <Input 
-                          id="phone" 
+                      <div className="space-y-2">
+                        <Label htmlFor="phone" className="text-sm text-gray-700">Telefone</Label>
+                        <Input
+                          id="phone"
                           name="phone"
                           value={createFormData.phone}
                           onChange={handleCreateFormChange}
-                          className="mt-1.5"
-                          placeholder="Digite o telefone do paciente"
+                          placeholder="Telefone do paciente"
+                          className="bg-white/50 border-gray-200 focus:border-gray-300 text-gray-900"
                         />
                       </div>
+                    </div>
+                  </div>
 
-                      <div>
-                        <Label>Status</Label>
-                        <div className="relative mt-1.5">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            role="combobox"
-                            className="w-full justify-between"
-                            onClick={() => setIsCreateStatusOpen(!isCreateStatusOpen)}
-                          >
-                            <span>{createFormData.status || 'Selecione um status'}</span>
-                            <ChevronDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                          {isCreateStatusOpen && (
-                            <div className="absolute top-full left-0 w-full z-50 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg">
-                              <div className="p-1">
-                                {['novo', 'contato', 'agendado', 'concluído'].map((status) => (
-                                  <button
-                                    key={status}
-                                    className={cn(
-                                      'w-full flex items-center px-3 py-2 rounded-md text-sm',
-                                      createFormData.status === status ? 'bg-gray-100' : 'hover:bg-gray-50'
-                                    )}
-                                    onClick={() => {
-                                      handleCreateStatusChange(status);
-                                      setIsCreateStatusOpen(false);
-                                    }}
-                                  >
-                                    {status}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="hasPortalAccess"
-                          checked={createFormData.hasPortalAccess}
-                          onCheckedChange={(checked) => 
-                            setCreateFormData(prev => ({ ...prev, hasPortalAccess: checked as boolean }))
-                          }
-                        />
-                        <label
-                          htmlFor="hasPortalAccess"
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  {/* Status e Consulta */}
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 mb-3">Status e Consulta</h3>
+                    <div className="grid gap-4 bg-gray-50/50 p-4 rounded-lg">
+                      <div className="space-y-2">
+                        <Label htmlFor="status" className="text-sm text-gray-700">Status</Label>
+                        <UISelect
+                          value={createFormData.status}
+                          onValueChange={handleCreateStatusChange}
                         >
-                          Enviar acesso ao portal do paciente
-                        </label>
+                          <UISelectTrigger className="bg-white/50 border-gray-200 focus:border-gray-300 text-gray-900">
+                            <UISelectValue placeholder="Selecione o status" />
+                          </UISelectTrigger>
+                          <UISelectContent>
+                            <UISelectGroup>
+                              <UISelectItem value="novo">Novo</UISelectItem>
+                              <UISelectItem value="agendado">Agendado</UISelectItem>
+                              <UISelectItem value="concluído">Concluído</UISelectItem>
+                            </UISelectGroup>
+                          </UISelectContent>
+                        </UISelect>
                       </div>
-
-                    {/* Optional fields - data da consulta e prontuário */}
-                      <div>
-                      <Label htmlFor="appointmentDate">Data da Consulta (opcional)</Label>
-                      <div className="mt-1.5">
-                        <DateTimePicker
+                      <div className="space-y-2">
+                        <Label htmlFor="appointmentDate" className="text-sm text-gray-700">Data da Consulta</Label>
+                        <DatePicker
                           date={createFormData.appointmentDate ? new Date(createFormData.appointmentDate) : null}
                           onChange={handleCreateAppointmentDateChange}
-                          placeholder="Selecione data e hora da consulta"
+                          showTimeSelect={true}
+                          dateFormat="dd/MM/yyyy HH:mm"
                         />
                       </div>
-                      </div>
+                    </div>
+                  </div>
 
-                      <div>
-                      <Label htmlFor="medicalNotes">Prontuário Médico (opcional)</Label>
-                        <Textarea 
-                          id="medicalNotes" 
+                  {/* Prontuário */}
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 mb-3">Prontuário</h3>
+                    <div className="grid gap-4 bg-gray-50/50 p-4 rounded-lg">
+                      <div className="space-y-2">
+                        <Label htmlFor="medicalNotes" className="text-sm text-gray-700">Anotações</Label>
+                        <Textarea
+                          id="medicalNotes"
                           name="medicalNotes"
                           value={createFormData.medicalNotes}
                           onChange={handleCreateFormChange}
-                          className="mt-1.5 min-h-[150px]"
-                          placeholder="Digite as informações do prontuário médico"
+                          placeholder="Anotações sobre o paciente"
+                          className="bg-white/50 border-gray-200 focus:border-gray-300 text-gray-900 min-h-[100px]"
                         />
                       </div>
-                    </>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsCreateModalOpen(false)}
+                      className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      onClick={handleCreatePatient}
+                      disabled={isCreating}
+                      className="bg-gray-900 text-white hover:bg-gray-800"
+                    >
+                      {isCreating ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border border-white border-t-transparent mr-2"></div>
+                          Criando...
+                        </>
+                      ) : (
+                        'Criar Paciente'
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </ScrollArea>
+          </div>
+        </SheetContent>
+      </Sheet>
 
-            <div className="px-6 py-4 border-t border-gray-200 bg-white">
-              <div className="flex justify-end gap-3">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="h-10"
-                >
-                  Cancelar
-                </Button>
-                <Button 
-                  onClick={handleCreateNewPatient}
-                  className="h-10"
-                  disabled={isCreating}
-                >
-                  {isCreating ? (
-                    <>
-                      <span className="animate-spin rounded-full h-4 w-4 border border-current border-t-transparent mr-2"></span>
-                      Criando...
-                    </>
-                  ) : "Criar Paciente"}
-                </Button>
+      {/* Delete Confirmation Modal */}
+      <Sheet
+        open={isDeleteModalOpen}
+        onOpenChange={(open) => {
+          setIsDeleteModalOpen(open);
+          if (!open) {
+            setPatientToDelete(null);
+          }
+        }}
+      >
+        <SheetContent side="right" className="w-full sm:max-w-[400px] p-0 bg-gray-50">
+          <div className="flex h-full flex-col">
+            <div className="px-6 py-4 border-b border-gray-200 bg-white">
+              <SheetHeader>
+                <SheetTitle className="text-xl font-semibold text-gray-900">
+                  Excluir Paciente
+                </SheetTitle>
+                <SheetDescription>
+                  Tem certeza que deseja excluir este paciente?
+                </SheetDescription>
+              </SheetHeader>
+            </div>
+
+            <div className="p-6">
+              <div className="space-y-6">
+                <div className="bg-white rounded-lg border border-gray-200 p-4">
+                  <div className="grid gap-2">
+                    <div>
+                      <p className="text-xs text-gray-500">Nome</p>
+                      <p className="text-sm text-gray-900">{patientToDelete?.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Email</p>
+                      <p className="text-sm text-gray-900">{patientToDelete?.email}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsDeleteModalOpen(false)}
+                    className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={handleDeletePatient}
+                    className="bg-red-600 text-white hover:bg-red-700"
+                  >
+                    Excluir
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
         </SheetContent>
       </Sheet>
 
-      {/* Add CSV Import Modal */}
+      {/* CSV Import Modal */}
       <CSVImportModal
         isOpen={isImportModalOpen}
         onClose={handleCloseImportModal}
         onImportComplete={handleImportComplete}
       />
-    </>
+    </div>
   );
 } 
